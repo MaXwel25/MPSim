@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using MPSim.Models;
 
@@ -14,7 +15,8 @@ namespace MPSim.Services
 
         private readonly Random _random = new Random(42); // пока фиксированный Seed
 
-        public async Task RunAsync(int k, int jobsCount, int tickDelayMs) // асинхронно!
+        // добавка токена для 
+        public async Task RunAsync(int k, int jobsCount, int tickDelayMs, CancellationToken cancellationToken) // асинхронно!
         {
             var states = new List<PhaseState>();
             var buffers = new Queue<Job>[k];
@@ -38,6 +40,7 @@ namespace MPSim.Services
                 // генерация (случайные интервалы)
                 if (jobsCreated < jobsCount && tick >= nextJobArrival)
                 {
+                    cancellationToken.ThrowIfCancellationRequested();
                     var job = new Job
                     {
                         Id = jobsCreated + 1,
@@ -101,7 +104,7 @@ namespace MPSim.Services
                 OnUpdate?.Invoke(states);
 
                 // пауза для визуализации
-                await Task.Delay(tickDelayMs);
+                await Task.Delay(tickDelayMs, cancellationToken); // добавлен токен для кнопки стоп
             }
         }
 

@@ -1,11 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Drawing;
-using System.Drawing.Drawing2D;
+using System.Drawing.Drawing2D; // нужно для GraphicsPath (красивые кнопки)
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-using System.Drawing.Drawing2D; // нужно для GraphicsPath (красивые кнопки)
-
 using MPSim.Models;
 using MPSim.Services;
 using MPSim.UI;
@@ -18,6 +17,12 @@ namespace MPSim
         private FlowLayoutPanel _pipelinePanel;
         private List<PhaseVisualizer> _visualizers = new List<PhaseVisualizer>();
         private DataGridView _gridStats;
+
+        private CancellationTokenSource _cts; // для остановки
+        private bool _isRunning = false; // состояния конвейера
+
+        private Button _btnStart;
+        private Button _btnStop;
 
         public Form1()
         {
@@ -39,6 +44,7 @@ namespace MPSim
         protected override void OnFormClosed(FormClosedEventArgs e)
         {
             Theme.ThemeChanged -= ApplyThemeToUI;
+            _cts?.Cancel(); // гарантированная остановка при закрытии
             base.OnFormClosed(e);
         }
 
@@ -48,7 +54,7 @@ namespace MPSim
             Panel top = new Panel { Dock = DockStyle.Top, Height = 60 };
 
             // кнопка старт
-            Button btnStart = new Button
+            _btnStart = new Button
             {
                 Text = "▶ СТАРТ",
                 Location = new Point(20, 10),
@@ -57,22 +63,39 @@ namespace MPSim
                 FlatStyle = FlatStyle.Flat,
                 Cursor = Cursors.Hand // курсор-рука для удобства
             };
-            btnStart.Click += async (s, e) =>
-            {
-                btnStart.Enabled = false;
-                await _engine.RunAsync(k: 4, jobsCount: 30, tickDelayMs: 150);
-                btnStart.Enabled = true;
-            };
+            _btnStart.Click += BtnStart_Click;
 
-            int radius = 15; // радиус скругления
-            GraphicsPath path1 = new GraphicsPath();
-            path1.StartFigure();
-            path1.AddArc(0, 0, radius, radius, 180, 90); // верхний-левый
-            path1.AddArc(btnStart.Width - radius, 0, radius, radius, 270, 90); // верхний-правый
-            path1.AddArc(btnStart.Width - radius, btnStart.Height - radius, radius, radius, 0, 90); // нижний-правый
-            path1.AddArc(0, btnStart.Height - radius, radius, radius, 90, 90); // нижний-левый
-            path1.CloseFigure();
-            btnStart.Region = new Region(path1);
+            int radius = 15;
+            GraphicsPath pathStart = new GraphicsPath();
+            pathStart.StartFigure();
+            pathStart.AddArc(0, 0, radius, radius, 180, 90);
+            pathStart.AddArc(_btnStart.Width - radius, 0, radius, radius, 270, 90);
+            pathStart.AddArc(_btnStart.Width - radius, _btnStart.Height - radius, radius, radius, 0, 90);
+            pathStart.AddArc(0, _btnStart.Height - radius, radius, radius, 90, 90);
+            pathStart.CloseFigure();
+            _btnStart.Region = new Region(pathStart);
+
+            // 2. Кнопка СТОП (сразу справа от СТАРТ)
+            _btnStop = new Button
+            {
+                Text = "⏹ СТОП",
+                Location = new Point(130, 10), // 20 + 100 + 10 отступ
+                Width = 100,
+                Height = 40,
+                FlatStyle = FlatStyle.Flat,
+                Anchor = AnchorStyles.Left | AnchorStyles.Top,
+                Enabled = false // изначально неактивна
+            };
+            _btnStop.Click += BtnStop_Click;
+
+            GraphicsPath pathStop = new GraphicsPath();
+            pathStop.StartFigure();
+            pathStop.AddArc(0, 0, radius, radius, 180, 90);
+            pathStop.AddArc(_btnStop.Width - radius, 0, radius, radius, 270, 90);
+            pathStop.AddArc(_btnStop.Width - radius, _btnStop.Height - radius, radius, radius, 0, 90);
+            pathStop.AddArc(0, _btnStop.Height - radius, radius, radius, 90, 90);
+            pathStop.CloseFigure();
+            _btnStop.Region = new Region(pathStop);
 
             // кнопка настройки
             Button btnSettings = new Button
@@ -87,14 +110,14 @@ namespace MPSim
                 FlatAppearance = { BorderSize = 0 }
             };
 
-            GraphicsPath path2 = new GraphicsPath();
-            path2.StartFigure();
-            path2.AddArc(0, 0, radius, radius, 180, 90); // Верхний-левый
-            path2.AddArc(btnSettings.Width - radius, 0, radius, radius, 270, 90); // Верхний-правый
-            path2.AddArc(btnSettings.Width - radius, btnSettings.Height - radius, radius, radius, 0, 90); // Нижний-правый
-            path2.AddArc(0, btnSettings.Height - radius, radius, radius, 90, 90); // Нижний-левый
-            path2.CloseFigure();
-            btnSettings.Region = new Region(path2);
+            GraphicsPath pathSettings = new GraphicsPath();
+            pathSettings.StartFigure();
+            pathSettings.AddArc(0, 0, radius, radius, 180, 90);
+            pathSettings.AddArc(btnSettings.Width - radius, 0, radius, radius, 270, 90);
+            pathSettings.AddArc(btnSettings.Width - radius, btnSettings.Height - radius, radius, radius, 0, 90);
+            pathSettings.AddArc(0, btnSettings.Height - radius, radius, radius, 90, 90);
+            pathSettings.CloseFigure();
+            btnSettings.Region = new Region(pathSettings);
 
             //GraphicsPath path = new GraphicsPath();
             //// создаем эллипс по размеру кнопки
@@ -109,7 +132,8 @@ namespace MPSim
                 settingsForm.ShowDialog(this);
             };
 
-            top.Controls.Add(btnStart);
+            top.Controls.Add(_btnStart);
+            top.Controls.Add(_btnStop);
             top.Controls.Add(btnSettings);
             this.Controls.Add(top);
 
@@ -142,6 +166,38 @@ namespace MPSim
                 _pipelinePanel.Controls.Add(panel);
                 _visualizers.Add(new PhaseVisualizer(panel));
             }
+        }
+
+        private async void BtnStart_Click(object sender, EventArgs e)
+        {
+            if (_isRunning) return;
+
+            _cts = new CancellationTokenSource();
+            _isRunning = true;
+
+            _btnStart.Enabled = false;
+            _btnStop.Enabled = true;
+
+            try
+            {
+                // запуск с поддержкой отмены
+                await _engine.RunAsync(k: 4, jobsCount: 30, tickDelayMs: 150, _cts.Token);
+            }
+            catch (OperationCanceledException)
+            {
+                // нормальное завершение при нажатии СТОП
+            }
+            finally
+            {
+                _isRunning = false;
+                _btnStart.Enabled = true;
+                _btnStop.Enabled = false;
+            }
+        }
+
+        private void BtnStop_Click(object sender, EventArgs e)
+        {
+            _cts?.Cancel();
         }
 
         // применяет текущую тему ко всем элементам формы
