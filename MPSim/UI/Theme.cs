@@ -13,7 +13,17 @@ namespace MPSim.UI
     {
         public static AppTheme CurrentTheme { get; private set; } = AppTheme.Dark;
 
-        public static void SetTheme(AppTheme theme) => CurrentTheme = theme;
+        // глобальное событие для мгновенного обновления ui
+        public static event Action ThemeChanged;
+
+        public static void SetTheme(AppTheme theme)
+        {
+            if (CurrentTheme != theme)
+            {
+                CurrentTheme = theme;
+                ThemeChanged?.Invoke(); // уведомление об изменение темы
+            }
+        }
 
         // цвета (для всего приложения) в 2-ух темах
         public static Color FormBg => CurrentTheme == AppTheme.Dark ? Color.FromArgb(30, 30, 30) : Color.FromArgb(245, 245, 245);

@@ -1,8 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Drawing.Drawing2D;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using System.Drawing.Drawing2D; // нужно для GraphicsPath (красивые кнопки)
+
 using MPSim.Models;
 using MPSim.Services;
 using MPSim.UI;
@@ -15,7 +18,6 @@ namespace MPSim
         private FlowLayoutPanel _pipelinePanel;
         private List<PhaseVisualizer> _visualizers = new List<PhaseVisualizer>();
         private DataGridView _gridStats;
-        private Button _btnThemeToggle;
 
         public Form1()
         {
@@ -26,8 +28,18 @@ namespace MPSim
             _engine = new SimulationEngine();
             _engine.OnUpdate = UpdateUI;
 
+            // подписка на глобальное событие смены темы
+            Theme.ThemeChanged += ApplyThemeToUI;
+
             BuildInterface();
-            ApplyThemeToUI(); // применяем тему при старте
+            ApplyThemeToUI();
+        }
+
+        // отписываемся от события при закрытии формы, чтобы избежать утечек памяти
+        protected override void OnFormClosed(FormClosedEventArgs e)
+        {
+            Theme.ThemeChanged -= ApplyThemeToUI;
+            base.OnFormClosed(e);
         }
 
         private void BuildInterface()
@@ -35,7 +47,16 @@ namespace MPSim
             // верхняя панель
             Panel top = new Panel { Dock = DockStyle.Top, Height = 60 };
 
-            Button btnStart = new Button { Text = "▶ СТАРТ", Location = new Point(20, 10), Width = 100, Height = 40, FlatStyle = FlatStyle.Flat };
+            // кнопка старт
+            Button btnStart = new Button
+            {
+                Text = "▶ СТАРТ",
+                Location = new Point(20, 10),
+                Width = 100,
+                Height = 40,
+                FlatStyle = FlatStyle.Flat,
+                Cursor = Cursors.Hand // курсор-рука для удобства
+            };
             btnStart.Click += async (s, e) =>
             {
                 btnStart.Enabled = false;
@@ -43,19 +64,72 @@ namespace MPSim
                 btnStart.Enabled = true;
             };
 
-            _btnThemeToggle = new Button { Text = " ТЕМА", Location = new Point(140, 10), Width = 90, Height = 40, FlatStyle = FlatStyle.Flat };
-            _btnThemeToggle.Click += (s, e) => ToggleTheme();
+            int radius = 15; // радиус скругления
+            GraphicsPath path1 = new GraphicsPath();
+            path1.StartFigure();
+            path1.AddArc(0, 0, radius, radius, 180, 90); // верхний-левый
+            path1.AddArc(btnStart.Width - radius, 0, radius, radius, 270, 90); // верхний-правый
+            path1.AddArc(btnStart.Width - radius, btnStart.Height - radius, radius, radius, 0, 90); // нижний-правый
+            path1.AddArc(0, btnStart.Height - radius, radius, radius, 90, 90); // нижний-левый
+            path1.CloseFigure();
+            btnStart.Region = new Region(path1);
+
+            // кнопка настройки
+            Button btnSettings = new Button
+            {
+                Text = "НАСТРОЙКИ",
+                Location = new Point(60, 10),
+                Width = 120,
+                Height = 40,
+                FlatStyle = FlatStyle.Flat,
+                Anchor = AnchorStyles.Right | AnchorStyles.Top,  // фиксируем справа
+                Cursor = Cursors.Hand, // курсор-рука для удобства
+                FlatAppearance = { BorderSize = 0 }
+            };
+
+            GraphicsPath path2 = new GraphicsPath();
+            path2.StartFigure();
+            path2.AddArc(0, 0, radius, radius, 180, 90); // Верхний-левый
+            path2.AddArc(btnSettings.Width - radius, 0, radius, radius, 270, 90); // Верхний-правый
+            path2.AddArc(btnSettings.Width - radius, btnSettings.Height - radius, radius, radius, 0, 90); // Нижний-правый
+            path2.AddArc(0, btnSettings.Height - radius, radius, radius, 90, 90); // Нижний-левый
+            path2.CloseFigure();
+            btnSettings.Region = new Region(path2);
+
+            //GraphicsPath path = new GraphicsPath();
+            //// создаем эллипс по размеру кнопки
+            //path.AddEllipse(0, 0, btnSettings.Width, btnSettings.Height);
+            //// применяем эту форму как область видимости/кликабельности кнопки
+            //btnSettings.Region = new Region(path);
+
+            btnSettings.Click += (s, e) =>
+            {
+                // открываем модальное окно настроек
+                using var settingsForm = new SettingsForm();
+                settingsForm.ShowDialog(this);
+            };
 
             top.Controls.Add(btnStart);
-            top.Controls.Add(_btnThemeToggle);
+            top.Controls.Add(btnSettings);
             this.Controls.Add(top);
 
-            // конвейер
-            _pipelinePanel = new FlowLayoutPanel { Dock = DockStyle.Fill, WrapContents = false, AutoScroll = true };
+            // панель визуализации
+            _pipelinePanel = new FlowLayoutPanel
+            {
+                Dock = DockStyle.Fill,
+                WrapContents = false,
+                AutoScroll = true
+            };
             this.Controls.Add(_pipelinePanel);
 
-            // статистика (на вывод)
-            _gridStats = new DataGridView { Dock = DockStyle.Bottom, Height = 150, RowHeadersVisible = false, AllowUserToAddRows = false };
+            // таблицы статистики
+            _gridStats = new DataGridView
+            {
+                Dock = DockStyle.Bottom,
+                Height = 150,
+                RowHeadersVisible = false,
+                AllowUserToAddRows = false
+            };
             _gridStats.Columns.Add("Phase", "Фаза");
             _gridStats.Columns.Add("Idle", "Простой (с)");
             _gridStats.Columns.Add("Jobs", "Заданий");
@@ -70,17 +144,19 @@ namespace MPSim
             }
         }
 
-        private void ToggleTheme()
-        {
-            var newTheme = Theme.CurrentTheme == AppTheme.Dark ? AppTheme.Light : AppTheme.Dark;
-            Theme.SetTheme(newTheme);
-            ApplyThemeToUI();
-        }
-
+        // применяет текущую тему ко всем элементам формы
         private void ApplyThemeToUI()
         {
-            // фон формы и панелей
+            if (this.InvokeRequired)
+            {
+                this.Invoke(new Action(ApplyThemeToUI));
+                return;
+            }
+
+            // фон формы
             this.BackColor = Theme.FormBg;
+
+            // верхняя панель и кнопки
             foreach (Control c in this.Controls)
             {
                 if (c is Panel p && c.Dock == DockStyle.Top)
@@ -90,8 +166,12 @@ namespace MPSim
                     {
                         if (child is Button btn)
                         {
-                            btn.BackColor = btn.Text.Contains("ТЕМА") ? Theme.ToggleBtnBg : Theme.ButtonBg;
-                            btn.ForeColor = btn.Text.Contains("ТЕМА") ? Theme.TextColor : Theme.ButtonText;
+                            btn.BackColor = btn.Text.Contains("НАСТРОЙКИ")
+                                ? Theme.ToggleBtnBg
+                                : Theme.ButtonBg;
+                            btn.ForeColor = btn.Text.Contains("НАСТРОЙКИ")
+                                ? Theme.TextColor
+                                : Theme.ButtonText;
                         }
                     }
                 }
