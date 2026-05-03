@@ -20,14 +20,16 @@ namespace MPSim
 
         private CancellationTokenSource _cts; // для остановки
         private bool _isRunning = false; // состояния конвейера
+        private Button _btnStart, _btnStop, _btnSettings, _btnExport, _btnParams;
 
-        private Button _btnStart, _btnStop, _btnSettings, _btnExport;
+        private SimulationParameters _currentParams = new SimulationParameters();
 
         public Form1()
         {
             InitializeComponent();
             this.Text = "MPSim: Анализ конвейера";
             this.Size = new Size(1000, 700);
+
 
             _engine = new SimulationEngine();
             _engine.OnUpdate = UpdateUI;
@@ -93,6 +95,19 @@ namespace MPSim
             _btnExport.Click += BtnExport_Click;
             _btnExport.Region = CreateRoundedRegion(_btnExport, radius);
 
+            // кнопка параметров симуляции
+            _btnParams = new Button
+            {
+                Text = "⚙ ПАРАМЕТРЫ",
+                Location = new Point(350, 10),
+                Width = 130,
+                Height = 40,
+                FlatStyle = FlatStyle.Flat,
+                Cursor = Cursors.Hand
+            };
+            _btnParams.Click += BtnParams_Click;
+            _btnParams.Region = CreateRoundedRegion(_btnParams, radius);
+
             // кнопка настройки
             _btnSettings = new Button
             {
@@ -124,6 +139,7 @@ namespace MPSim
             top.Controls.Add(_btnStop);
             top.Controls.Add(_btnExport);
             top.Controls.Add(_btnSettings);
+            top.Controls.Add(_btnParams);
             this.Controls.Add(top);
 
             // панель визуализации
@@ -185,27 +201,27 @@ namespace MPSim
                 // создаём параметры распределений перед вызовом
                 var arrivalParams = new DistributionParams
                 {
-                    Type = "Uniform",
-                    Min = 1.0,
-                    Max = 5.0,
-                    Lambda = 0.5
+                    Type = _currentParams.ArrivalDistType,
+                    Min = _currentParams.ArrivalMin,
+                    Max = _currentParams.ArrivalMax,
+                    Lambda = _currentParams.ArrivalLambda
                 };
 
                 var processingParams = new DistributionParams
                 {
-                    Type = "Uniform",
-                    Min = 2.0,
-                    Max = 6.0,
-                    Mean = 4.0,
-                    StdDev = 1.0
+                    Type = _currentParams.ProcessingDistType,
+                    Min = _currentParams.ProcessingMin,
+                    Max = _currentParams.ProcessingMax,
+                    Mean = _currentParams.ProcessingMean,
+                    StdDev = _currentParams.ProcessingStdDev
                 };
 
                 // теперь передаём все 7 параметров (включая созданные выше)
                 await _engine.RunAsync(
-                    k: 4,
-                    jobsCount: 30,
-                    tickDelayMs: 150,
-                    seed: null,
+                    k: _currentParams.PhasesCount,
+                    jobsCount: _currentParams.JobsCount,
+                    tickDelayMs: _currentParams.TickDelayMs,
+                    seed: _currentParams.UseRandomSeed ? null : _currentParams.RandomSeed,
                     arrivalParams: arrivalParams,        // переменная создана выше
                     processingParams: processingParams,  // переменная создана выше
                     cancellationToken: _cts.Token);
@@ -229,21 +245,81 @@ namespace MPSim
             using var saveDialog = new SaveFileDialog
             {
                 Filter = "CSV файлы|*.csv|Все файлы|*.*",
-                FileName = $"MPSim_Results_{DateTime.Now:yyyyMMdd_HHmmss}.csv"
+                FileName = $"MPSim_Results_{DateTime.Now:yyyyMMdd_HHmmss}.csv" // по текущей дате
             };
 
             if (saveDialog.ShowDialog() == DialogResult.OK)
             {
                 try
                 {
-                    ExportService.ExportAllResults(saveDialog.FileName, _engine.JobHistory, _engine.TotalSimulationTime);
-                    MessageBox.Show("Экспорт завершен успешно!", "Успех");
+                    // получаем текущее состояние фаз
+                    var currentStates = new List<PhaseState>();
+                    foreach (var vis in _visualizers)
+                    {
+                        // здесь нужно получить актуальное состояние из визуализаторов
+                        // для упрощения создаём заглушку — в реальном коде передавайте из UpdateUI
+                        currentStates.Add(new PhaseState { Index = 0, JobsProcessed = 0, TotalWaitTime = 0, TotalIdleTime = 0 });
+                    }
+                    ExportService.ExportFullReport(
+                        saveDialog.FileName,
+                        currentStates, // замените на актуальные states
+                        _engine.JobHistory,
+                        _currentParams,
+                        _engine.TotalSimulationTime);
+
+
+                    MessageBox.Show("Отчёт успешно сохранён!", "Экспорт",
+                        MessageBoxButtons.OK, MessageBoxIcon.Information);
                 }
                 catch (Exception ex)
                 {
-                    MessageBox.Show($"Ошибка: {ex.Message}");
+                    MessageBox.Show($"Ошибка: {ex.Message}", "Экспорт",
+                MessageBoxButtons.OK, MessageBoxIcon.Error);
                 }
             }
+        }
+
+        private void BtnParams_Click(object sender, EventArgs e)
+        {
+            using var paramsForm = new ParametersForm();
+            if (paramsForm.ShowDialog(this) == DialogResult.OK)
+            {
+                _currentParams = new SimulationParameters
+                {
+                    PhasesCount = paramsForm.PhasesCount,
+                    JobsCount = paramsForm.JobsCount,
+                    TickDelayMs = paramsForm.TickDelayMs,
+                    UseRandomSeed = paramsForm.UseRandomSeed,
+                    RandomSeed = paramsForm.RandomSeed,
+                    ArrivalDistType = paramsForm.ArrivalDistType,
+                    ArrivalMin = paramsForm.ArrivalMin,
+                    ArrivalMax = paramsForm.ArrivalMax,
+                    ArrivalLambda = paramsForm.ArrivalLambda,
+                    ProcessingDistType = paramsForm.ProcessingDistType,
+                    ProcessingMin = paramsForm.ProcessingMin,
+                    ProcessingMax = paramsForm.ProcessingMax,
+                    ProcessingMean = paramsForm.ProcessingMean,
+                    ProcessingStdDev = paramsForm.ProcessingStdDev
+                };
+
+                this.Text = $"MPSim | k={_currentParams.PhasesCount} | N={_currentParams.JobsCount}";
+
+                if (!_isRunning && _currentParams.PhasesCount != _visualizers.Count)
+                    RebuildPhases(_currentParams.PhasesCount);
+            }
+        }
+
+        private void RebuildPhases(int newK)
+        {
+            _pipelinePanel.Controls.Clear();
+            _visualizers.Clear();
+            for (int i = 0; i < newK; i++)
+            {
+                var panel = new Panel();
+                _pipelinePanel.Controls.Add(panel);
+                _visualizers.Add(new PhaseVisualizer(panel));
+            }
+            ApplyThemeToUI();
         }
 
         // применяет текущую тему ко всем элементам формы

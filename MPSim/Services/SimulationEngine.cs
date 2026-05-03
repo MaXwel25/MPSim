@@ -32,9 +32,6 @@ namespace MPSim.Services
 
         private Random _random; // инициализируется в RunAsync с учётом seed
 
-
-        // добавка токена для 
-        // добавка токена для 
         public async Task RunAsync(int k, int jobsCount, int tickDelayMs, int? seed, DistributionParams arrivalParams, DistributionParams processingParams, CancellationToken cancellationToken) // асинхронно!
         {
             // инициализация генератора случайных чисел с учётом seed
@@ -45,15 +42,15 @@ namespace MPSim.Services
 
             var states = new List<PhaseState>();
             var buffers = new Queue<Job>[k];
-            var activeJobs = new Job[k]; // текущие активные задания на каждой фазе
-            var jobEnterTimes = new double[k]; // время входа в буфер для каждой фазы
-
+            var activeJobs = new Job[k];
+            var phaseFreeTime = new double[k]; // free_time(i) — момент освобождения ФУ i
 
             // инициализация
             for (int i = 0; i < k; i++)
             {
                 buffers[i] = new Queue<Job>();
                 states.Add(new PhaseState { Index = i });
+                phaseFreeTime[i] = 0;
             }
 
             int jobsCreated = 0;
@@ -63,16 +60,16 @@ namespace MPSim.Services
             // главный цикл симуляции
             while (jobsCreated < jobsCount || CheckBuffersNotEmpty(buffers, k))
             {
+                cancellationToken.ThrowIfCancellationRequested();
                 tick++;
 
                 // генерация (случайные интервалы)
                 if (jobsCreated < jobsCount && tick >= nextJobArrival)
                 {
                     cancellationToken.ThrowIfCancellationRequested();
-                    var job = new Job
+                    var job = new Job(k)
                     {
                         Id = jobsCreated + 1,
-                        ProcessingTimes = new int[k]
                     };
 
                     // генерация s_i (от 2 до 6 тиков) — теперь с учётом выбранного распределения
@@ -90,58 +87,22 @@ namespace MPSim.Services
                 for (int i = k - 1; i >= 0; i--)
                 {
                     var state = states[i];
-                    var fuBusy = state.IsWorking;
 
-                    if (fuBusy)
+                    if (state.IsWorking && activeJobs[i] != null)
                     {
                         state.RemainingTime--;
 
-                        // если ФУ освободилось
+                        // завершение обработки на ФУ i
                         if (state.RemainingTime <= 0)
                         {
-
-                            // завершение обработки — сохраняем данные для экспорта
-                            if (activeJobs[i] != null)
-                            {
-                                JobHistory.Add(new Job
-                                {
-                                    Id = activeJobs[i].Id,
-                                    //Phase = i + 1,
-                                    BufferEnterTime = jobEnterTimes[i],
-                                    ProcessingStartTime = tick - state.RemainingTime,
-                                    ProcessingEndTime = tick,
-                                    WaitTime = tick - jobEnterTimes[i] - activeJobs[i].ProcessingTimes[i],
-                                    //ProcessingTime = activeJobs[i].ProcessingTimes[i]
-                                });
-                            }
-
-                            state.IsWorking = false;
-                            state.JobsProcessed++;
-
-                            // перемещаем задание в следующий буфер (если не последняя фаза)
-                            if (i < k - 1)
-                            {
-                                // пока не реализовано
-                            }
-                            activeJobs[i] = null;
-                        }
-                    }
-                    else
-                    {
-                        // если свободно, то пробуем взять из буфера
-                        if (buffers[i].Count > 0)
-                        {
-                            // ВРЕМЯ УПРОЩЕНО (временно)
-                            var job = buffers[i].Dequeue();
-                            activeJobs[i] = job;
-                            state.IsWorking = true;
-                            state.RemainingTime = job.ProcessingTimes[i];
-                            jobEnterTimes[i] = tick; // запоминаем время входа в буфер
+                            var job = activeJobs[i];
                             state.BufferSize = buffers[i].Count;
                         }
                         else
                         {
-                            state.TotalIdleTime++; // простой
+                            // ФУ простаивает
+                            if (phaseFreeTime[i] < tick)
+                                state.TotalIdleTime += 1;
                             state.BufferSize = 0;
                         }
                     }
