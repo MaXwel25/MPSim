@@ -36,5 +36,7 @@ namespace MPSim.UI
         public static Color ButtonBg => CurrentTheme == AppTheme.Dark ? Color.LimeGreen : Color.FromArgb(0, 120, 215);
         public static Color ButtonText => CurrentTheme == AppTheme.Dark ? Color.Black : Color.White;
         public static Color ToggleBtnBg => CurrentTheme == AppTheme.Dark ? Color.FromArgb(80, 80, 80) : Color.FromArgb(200, 200, 200);
+        public static Color GroupBoxBg => CurrentTheme == AppTheme.Dark ? Color.Transparent : Color.Transparent;
+        public static Color InputBg => CurrentTheme == AppTheme.Dark ? Color.FromArgb(60, 60, 60) : Color.White;
     }
 }

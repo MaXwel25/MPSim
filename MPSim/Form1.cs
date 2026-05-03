@@ -21,8 +21,7 @@ namespace MPSim
         private CancellationTokenSource _cts; // для остановки
         private bool _isRunning = false; // состояния конвейера
 
-        private Button _btnStart;
-        private Button _btnStop;
+        private Button _btnStart, _btnStop, _btnSettings, _btnExport;
 
         public Form1()
         {
@@ -52,6 +51,7 @@ namespace MPSim
         {
             // верхняя панель
             Panel top = new Panel { Dock = DockStyle.Top, Height = 60 };
+            int radius = 15;
 
             // кнопка старт
             _btnStart = new Button
@@ -64,18 +64,9 @@ namespace MPSim
                 Cursor = Cursors.Hand // курсор-рука для удобства
             };
             _btnStart.Click += BtnStart_Click;
+            _btnStart.Region = CreateRoundedRegion(_btnStart, radius);
 
-            int radius = 15;
-            GraphicsPath pathStart = new GraphicsPath();
-            pathStart.StartFigure();
-            pathStart.AddArc(0, 0, radius, radius, 180, 90);
-            pathStart.AddArc(_btnStart.Width - radius, 0, radius, radius, 270, 90);
-            pathStart.AddArc(_btnStart.Width - radius, _btnStart.Height - radius, radius, radius, 0, 90);
-            pathStart.AddArc(0, _btnStart.Height - radius, radius, radius, 90, 90);
-            pathStart.CloseFigure();
-            _btnStart.Region = new Region(pathStart);
-
-            // 2. Кнопка СТОП (сразу справа от СТАРТ)
+            // кнопка стоп
             _btnStop = new Button
             {
                 Text = "⏹ СТОП",
@@ -87,18 +78,23 @@ namespace MPSim
                 Enabled = false // изначально неактивна
             };
             _btnStop.Click += BtnStop_Click;
+            _btnStop.Region = CreateRoundedRegion(_btnStop, radius);
 
-            GraphicsPath pathStop = new GraphicsPath();
-            pathStop.StartFigure();
-            pathStop.AddArc(0, 0, radius, radius, 180, 90);
-            pathStop.AddArc(_btnStop.Width - radius, 0, radius, radius, 270, 90);
-            pathStop.AddArc(_btnStop.Width - radius, _btnStop.Height - radius, radius, radius, 0, 90);
-            pathStop.AddArc(0, _btnStop.Height - radius, radius, radius, 90, 90);
-            pathStop.CloseFigure();
-            _btnStop.Region = new Region(pathStop);
+            // кнопка экспорт
+            _btnExport = new Button
+            {
+                Text = "📊 Экспорт",
+                Location = new Point(240, 10),
+                Width = 100,
+                Height = 40,
+                FlatStyle = FlatStyle.Flat,
+                Cursor = Cursors.Hand
+            };
+            _btnExport.Click += BtnExport_Click;
+            _btnExport.Region = CreateRoundedRegion(_btnExport, radius);
 
             // кнопка настройки
-            Button btnSettings = new Button
+            _btnSettings = new Button
             {
                 Text = "НАСТРОЙКИ",
                 Location = new Point(60, 10),
@@ -109,15 +105,7 @@ namespace MPSim
                 Cursor = Cursors.Hand, // курсор-рука для удобства
                 FlatAppearance = { BorderSize = 0 }
             };
-
-            GraphicsPath pathSettings = new GraphicsPath();
-            pathSettings.StartFigure();
-            pathSettings.AddArc(0, 0, radius, radius, 180, 90);
-            pathSettings.AddArc(btnSettings.Width - radius, 0, radius, radius, 270, 90);
-            pathSettings.AddArc(btnSettings.Width - radius, btnSettings.Height - radius, radius, radius, 0, 90);
-            pathSettings.AddArc(0, btnSettings.Height - radius, radius, radius, 90, 90);
-            pathSettings.CloseFigure();
-            btnSettings.Region = new Region(pathSettings);
+            _btnSettings.Region = CreateRoundedRegion(_btnSettings, radius);
 
             //GraphicsPath path = new GraphicsPath();
             //// создаем эллипс по размеру кнопки
@@ -125,7 +113,7 @@ namespace MPSim
             //// применяем эту форму как область видимости/кликабельности кнопки
             //btnSettings.Region = new Region(path);
 
-            btnSettings.Click += (s, e) =>
+            _btnSettings.Click += (s, e) =>
             {
                 // открываем модальное окно настроек
                 using var settingsForm = new SettingsForm();
@@ -134,7 +122,8 @@ namespace MPSim
 
             top.Controls.Add(_btnStart);
             top.Controls.Add(_btnStop);
-            top.Controls.Add(btnSettings);
+            top.Controls.Add(_btnExport);
+            top.Controls.Add(_btnSettings);
             this.Controls.Add(top);
 
             // панель визуализации
@@ -168,6 +157,19 @@ namespace MPSim
             }
         }
 
+        // отдельно для скругления кнопок
+        private Region CreateRoundedRegion(Button btn, int radius)
+        {
+            var path = new GraphicsPath();
+            path.StartFigure();
+            path.AddArc(0, 0, radius, radius, 180, 90);
+            path.AddArc(btn.Width - radius, 0, radius, radius, 270, 90);
+            path.AddArc(btn.Width - radius, btn.Height - radius, radius, radius, 0, 90);
+            path.AddArc(0, btn.Height - radius, radius, radius, 90, 90);
+            path.CloseFigure();
+            return new Region(path);
+        }
+
         private async void BtnStart_Click(object sender, EventArgs e)
         {
             if (_isRunning) return;
@@ -180,13 +182,35 @@ namespace MPSim
 
             try
             {
-                // запуск с поддержкой отмены
-                await _engine.RunAsync(k: 4, jobsCount: 30, tickDelayMs: 150, _cts.Token);
+                // создаём параметры распределений перед вызовом
+                var arrivalParams = new DistributionParams
+                {
+                    Type = "Uniform",
+                    Min = 1.0,
+                    Max = 5.0,
+                    Lambda = 0.5
+                };
+
+                var processingParams = new DistributionParams
+                {
+                    Type = "Uniform",
+                    Min = 2.0,
+                    Max = 6.0,
+                    Mean = 4.0,
+                    StdDev = 1.0
+                };
+
+                // теперь передаём все 7 параметров (включая созданные выше)
+                await _engine.RunAsync(
+                    k: 4,
+                    jobsCount: 30,
+                    tickDelayMs: 150,
+                    seed: null,
+                    arrivalParams: arrivalParams,        // переменная создана выше
+                    processingParams: processingParams,  // переменная создана выше
+                    cancellationToken: _cts.Token);
             }
-            catch (OperationCanceledException)
-            {
-                // нормальное завершение при нажатии СТОП
-            }
+            catch (OperationCanceledException) { }
             finally
             {
                 _isRunning = false;
@@ -198,6 +222,28 @@ namespace MPSim
         private void BtnStop_Click(object sender, EventArgs e)
         {
             _cts?.Cancel();
+        }
+
+        private void BtnExport_Click(object sender, EventArgs e)
+        {
+            using var saveDialog = new SaveFileDialog
+            {
+                Filter = "CSV файлы|*.csv|Все файлы|*.*",
+                FileName = $"MPSim_Results_{DateTime.Now:yyyyMMdd_HHmmss}.csv"
+            };
+
+            if (saveDialog.ShowDialog() == DialogResult.OK)
+            {
+                try
+                {
+                    ExportService.ExportAllResults(saveDialog.FileName, _engine.JobHistory, _engine.TotalSimulationTime);
+                    MessageBox.Show("Экспорт завершен успешно!", "Успех");
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"Ошибка: {ex.Message}");
+                }
+            }
         }
 
         // применяет текущую тему ко всем элементам формы
