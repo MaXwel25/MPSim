@@ -5,8 +5,16 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:MPSim"
         mc:Ignorable="d"
-        Title="MainWindow" Height="450" Width="800">
+        Title="MPSim" Height="450" Width="800">
     <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="109*"/>
+            <ColumnDefinition Width="51*"/>
+        </Grid.ColumnDefinitions>
+        <Button x:Name="SettingsButton" Content="Настройки" HorizontalAlignment="Left" Margin="118,10,0,0" VerticalAlignment="Top" Grid.Column="1" Width="72"/>
+        <Button x:Name="ThemeButton" Grid.Column="1" Content="Тема" HorizontalAlignment="Left" Margin="205,10,0,0" VerticalAlignment="Top"/>
+        <Button x:Name="StartButton" Content="Старт!" HorizontalAlignment="Left" Margin="10,10,0,0" VerticalAlignment="Top" Height="33" Width="66"/>
+        <Button x:Name="StopButton" Content="Стоп!" HorizontalAlignment="Left" Margin="92,10,0,0" VerticalAlignment="Top" Height="33" Width="63"/>
 
     </Grid>
 </Window>
