@@ -1,0 +1,36 @@
+﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <SolidColorBrush x:Key="SuccessBrush" Color="#4CAF50"/>
+    <SolidColorBrush x:Key="WarningBrush" Color="#FF9800"/>
+    <SolidColorBrush x:Key="DangerBrush" Color="#F44336"/>
+
+    <SolidColorBrush x:Key="HoverBrush" Color="{DynamicResource PrimaryHueLightBrush}"/>
+    <SolidColorBrush x:Key="ChartPrimaryBrush" Color="#2196F3"/>
+    <SolidColorBrush x:Key="ChartAccentBrush" Color="#FF9800"/>
+    <SolidColorBrush x:Key="ChartGridBrush" Color="#E0E0E0"/>
+    <SolidColorBrush x:Key="ChartGridDarkBrush" Color="#424242"/>
+
+    <SolidColorBrush x:Key="TableHeaderBrush" Color="{DynamicResource PrimaryHueLightBrush}"/>
+    <SolidColorBrush x:Key="TableHeaderForegroundBrush" Color="{DynamicResource PrimaryHueLightForegroundBrush}"/>
+    <SolidColorBrush x:Key="TableRowHoverBrush" Color="{DynamicResource PrimaryHueLightestBrush}"/>
+    
+
+    <SolidColorBrush x:Key="ProgressBarPrimaryBrush" Color="{DynamicResource PrimaryHueMidBrush}"/>
+    <SolidColorBrush x:Key="ProgressBarSecondaryBrush" Color="{DynamicResource SecondaryHueMidBrush}"/>
+
+
+    <SolidColorBrush x:Key="ActionButtonBrush" Color="{DynamicResource PrimaryHueMidBrush}"/>
+    <SolidColorBrush x:Key="ActionButtonForegroundBrush" Color="{DynamicResource PrimaryHueMidForegroundBrush}"/>
+
+    <SolidColorBrush x:Key="ResetButtonLightBrush" Color="#81D4FA"/>
+
+    <SolidColorBrush x:Key="ResetButtonLightForegroundBrush" Color="#01579B"/>
+    <SolidColorBrush x:Key="ResetButtonDarkBrush" Color="#81D4FA"/>
+    <SolidColorBrush x:Key="ResetButtonDarkForegroundBrush" Color="#01579B"/>
+
+    <SolidColorBrush x:Key="CardHighlightBrush" Color="{DynamicResource PrimaryHueLightBrush}"/>
+    <SolidColorBrush x:Key="CardBorderLightBrush" Color="#E0E0E0"/>
+    <SolidColorBrush x:Key="CardBorderDarkBrush" Color="#424242"/>
+
+</ResourceDictionary>
