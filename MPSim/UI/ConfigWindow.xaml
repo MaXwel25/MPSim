@@ -4,11 +4,18 @@
         xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
         Title="Конфигурация симуляции" Height="560" Width="680"
         WindowStartupLocation="CenterOwner"
-	Background="{DynamicResource MaterialDesignPaper}"
-	TextElement.Foreground="{DynamicResource MaterialDesignBody}"
-	TextElement.FontWeight="Regular"
-	TextElement.FontSize="13"
-	FontFamily="{DynamicResource MaterialDesignFont}">
+        Background="{DynamicResource MaterialDesignPaper}"
+        TextElement.Foreground="{DynamicResource MaterialDesignBody}"
+        TextElement.FontWeight="Regular"
+        TextElement.FontSize="13"
+        FontFamily="{DynamicResource MaterialDesignFont}" Cursor="">
+	<Window.Resources>
+		<ResourceDictionary>
+			<ResourceDictionary.MergedDictionaries>
+				<ResourceDictionary Source="pack://application:,,,/MPSim;component/Themes/Styles.xaml"/>
+			</ResourceDictionary.MergedDictionaries>
+		</ResourceDictionary>
+	</Window.Resources>
 
 	<Grid Margin="24">
 		<Grid.RowDefinitions>
@@ -35,29 +42,53 @@
 
 							<StackPanel Grid.Column="0" Margin="0,0,8,0">
 								<TextBlock Text="Количество фаз (k)"
-                                           Style="{StaticResource MaterialDesignCaptionTextBlock}"
-                                           Margin="0,0,0,4"/>
+                                           Style="{StaticResource HintTextBlock}"
+                                           Margin="0,0,0,4">
+									<TextBlock.ToolTip>
+										<ToolTip Content="Число последовательных этапов обработки в конвейере. Каждой фазе соответствует своё функциональное устройство (ФУ)." Placement="Top"/>
+									</TextBlock.ToolTip>
+								</TextBlock>
 								<TextBox x:Name="txtPhases" Text="3"
-                                         Style="{StaticResource MaterialDesignTextBox}"
-                                         materialDesign:HintAssist.Hint="Например: 3"/>
+                                         Style="{StaticResource HintTextBox}"
+                                         materialDesign:HintAssist.Hint="Например: 3">
+									<TextBox.ToolTip>
+										<ToolTip Content="Количество фаз конвейера (k). Задание должно пройти все k фаз последовательно." Placement="Top"/>
+									</TextBox.ToolTip>
+								</TextBox>
 							</StackPanel>
 
 							<StackPanel Grid.Column="1" Margin="4,0,4,0">
 								<TextBlock Text="Количество заданий (N)"
-                                           Style="{StaticResource MaterialDesignCaptionTextBlock}"
-                                           Margin="0,0,0,4"/>
+                                           Style="{StaticResource HintTextBlock}"
+                                           Margin="0,0,0,4">
+									<TextBlock.ToolTip>
+										<ToolTip Content="Общее число заданий, которые будут обработаны системой за один прогон симуляции." Placement="Top"/>
+									</TextBlock.ToolTip>
+								</TextBlock>
 								<TextBox x:Name="txtJobs" Text="100"
-                                         Style="{StaticResource MaterialDesignTextBox}"
-                                         materialDesign:HintAssist.Hint="Например: 100"/>
+                                         Style="{StaticResource HintTextBox}"
+                                         materialDesign:HintAssist.Hint="Например: 100">
+									<TextBox.ToolTip>
+										<ToolTip Content="Количество заданий (N) для обработки. По каждому заданию будет собрана статистика." Placement="Top"/>
+									</TextBox.ToolTip>
+								</TextBox>
 							</StackPanel>
 
 							<StackPanel Grid.Column="2" Margin="8,0,0,0">
 								<TextBlock Text="Количество прогонов"
-                                           Style="{StaticResource MaterialDesignCaptionTextBlock}"
-                                           Margin="0,0,0,4"/>
+                                           Style="{StaticResource HintTextBlock}"
+                                           Margin="0,0,0,4">
+									<TextBlock.ToolTip>
+										<ToolTip Content="Число повторений эксперимента с разными seed для повышения статистической достоверности результатов." Placement="Top"/>
+									</TextBlock.ToolTip>
+								</TextBlock>
 								<TextBox x:Name="txtRuns" Text="10"
-                                         Style="{StaticResource MaterialDesignTextBox}"
-                                         materialDesign:HintAssist.Hint="Например: 10"/>
+                                         Style="{StaticResource HintTextBox}"
+                                         materialDesign:HintAssist.Hint="Например: 10">
+									<TextBox.ToolTip>
+										<ToolTip Content="Количество прогонов симуляции. Результаты усредняются по всем прогонам для уменьшения дисперсии." Placement="Top"/>
+									</TextBox.ToolTip>
+								</TextBox>
 							</StackPanel>
 						</Grid>
 					</GroupBox>
@@ -77,29 +108,53 @@
 
 							<StackPanel Grid.Column="0" Margin="0,0,8,0">
 								<TextBlock Text="Интенсивность потока (λ)"
-                                           Style="{StaticResource MaterialDesignCaptionTextBlock}"
-                                           Margin="0,0,0,4"/>
+                                           Style="{StaticResource HintTextBlock}"
+                                           Margin="0,0,0,4">
+									<TextBlock.ToolTip>
+										<ToolTip Content="Интенсивность пуассоновского потока заданий (заданий в единицу времени). Определяет среднюю частоту поступления заданий в систему." Placement="Top"/>
+									</TextBlock.ToolTip>
+								</TextBlock>
 								<TextBox x:Name="txtLambda" Text="0.8"
-                                         Style="{StaticResource MaterialDesignTextBox}"
-                                         materialDesign:HintAssist.Hint="Например: 0.8"/>
+                                         Style="{StaticResource HintTextBox}"
+                                         materialDesign:HintAssist.Hint="Например: 0.8">
+									<TextBox.ToolTip>
+										<ToolTip Content="λ - интенсивность входного потока. Средний интервал между заданиями = 1/λ. При λ=0.8 задания поступают в среднем каждые 1.25 ед. времени." Placement="Top"/>
+									</TextBox.ToolTip>
+								</TextBox>
 							</StackPanel>
 
 							<StackPanel Grid.Column="1" Margin="4,0,4,0">
 								<TextBlock Text="Среднее время обработки (μ)"
-                                           Style="{StaticResource MaterialDesignCaptionTextBlock}"
-                                           Margin="0,0,0,4"/>
+                                           Style="{StaticResource HintTextBlock}"
+                                           Margin="0,0,0,4">
+									<TextBlock.ToolTip>
+										<ToolTip Content="Среднее время выполнения одной фазы. Используется как математическое ожидание для генерации времён обработки." Placement="Top"/>
+									</TextBlock.ToolTip>
+								</TextBlock>
 								<TextBox x:Name="txtMu" Text="1.0"
-                                         Style="{StaticResource MaterialDesignTextBox}"
-                                         materialDesign:HintAssist.Hint="Например: 1.0"/>
+                                         Style="{StaticResource HintTextBox}"
+                                         materialDesign:HintAssist.Hint="Например: 1.0">
+									<TextBox.ToolTip>
+										<ToolTip Content="μ - среднее время обработки на каждой фазе. Задания генерируются с этим средним временем выполнения фазы." Placement="Top"/>
+									</TextBox.ToolTip>
+								</TextBox>
 							</StackPanel>
 
 							<StackPanel Grid.Column="2" Margin="8,0,0,0">
 								<TextBlock Text="СКО (σ)"
-                                           Style="{StaticResource MaterialDesignCaptionTextBlock}"
-                                           Margin="0,0,0,4"/>
+                                           Style="{StaticResource HintTextBlock}"
+                                           Margin="0,0,0,4">
+									<TextBlock.ToolTip>
+										<ToolTip Content="Стандартное отклонение времени обработки. Характеризует вариативность (разброс) времён выполнения фаз." Placement="Top"/>
+									</TextBlock.ToolTip>
+								</TextBlock>
 								<TextBox x:Name="txtSigma" Text="0.2"
-                                         Style="{StaticResource MaterialDesignTextBox}"
-                                         materialDesign:HintAssist.Hint="Например: 0.2"/>
+                                         Style="{StaticResource HintTextBox}"
+                                         materialDesign:HintAssist.Hint="Например: 0.2">
+									<TextBox.ToolTip>
+										<ToolTip Content="σ - стандартное отклонение. Чем больше σ, тем больше разброс времён обработки. При малом σ работа конвейера стабильнее." Placement="Top"/>
+									</TextBox.ToolTip>
+								</TextBox>
 							</StackPanel>
 						</Grid>
 					</GroupBox>
@@ -119,35 +174,81 @@
 
 							<StackPanel Grid.Column="0" Margin="0,0,8,0">
 								<TextBlock Text="Интервалы поступления"
-                                           Style="{StaticResource MaterialDesignCaptionTextBlock}"
-                                           Margin="0,0,0,4"/>
+                                           Style="{StaticResource HintTextBlock}"
+                                           Margin="0,0,0,4">
+									<TextBlock.ToolTip>
+										<ToolTip Content="Закон распределения интервалов между моментами поступления заданий в систему." Placement="Top"/>
+									</TextBlock.ToolTip>
+								</TextBlock>
 								<ComboBox x:Name="cbIntervalDist" SelectedIndex="0"
-                                          Style="{StaticResource MaterialDesignComboBox}">
-									<ComboBoxItem Content="Экспоненциальное"/>
-									<ComboBoxItem Content="Равномерное"/>
-									<ComboBoxItem Content="Нормальное"/>
+                                          Style="{StaticResource HintComboBox}">
+									<ComboBox.ToolTip>
+										<ToolTip Content="Распределение интервалов поступления:&#10;• Экспоненциальное - пуассоновский поток (рекомендуется)&#10;• Равномерное - равная вероятность в диапазоне&#10;• Нормальное - вокруг среднего значения" Placement="Top"/>
+									</ComboBox.ToolTip>
+									<ComboBoxItem Content="Экспоненциальное">
+										<ComboBoxItem.ToolTip>
+											<ToolTip Content="Экспоненциальное распределение f(x)=λe^(-λx). Стандартная модель для пуассоновского потока в теории массового обслуживания."/>
+										</ComboBoxItem.ToolTip>
+									</ComboBoxItem>
+									<ComboBoxItem Content="Равномерное">
+										<ComboBoxItem.ToolTip>
+											<ToolTip Content="Равномерное распределение на интервале [0.5λ, 1.5λ]. Все значения равновероятны."/>
+										</ComboBoxItem.ToolTip>
+									</ComboBoxItem>
+									<ComboBoxItem Content="Нормальное">
+										<ComboBoxItem.ToolTip>
+											<ToolTip Content="Нормальное распределение N(1/λ, 0.2). Обрезается до положительных значений."/>
+										</ComboBoxItem.ToolTip>
+									</ComboBoxItem>
 								</ComboBox>
 							</StackPanel>
 
 							<StackPanel Grid.Column="1" Margin="4,0,4,0">
 								<TextBlock Text="Время обработки"
-                                           Style="{StaticResource MaterialDesignCaptionTextBlock}"
-                                           Margin="0,0,0,4"/>
+                                           Style="{StaticResource HintTextBlock}"
+                                           Margin="0,0,0,4">
+									<TextBlock.ToolTip>
+										<ToolTip Content="Закон распределения времён выполнения фаз для каждого задания." Placement="Top"/>
+									</TextBlock.ToolTip>
+								</TextBlock>
 								<ComboBox x:Name="cbProcessingDist" SelectedIndex="0"
-                                          Style="{StaticResource MaterialDesignComboBox}">
-									<ComboBoxItem Content="Нормальное"/>
-									<ComboBoxItem Content="Экспоненциальное"/>
-									<ComboBoxItem Content="Равномерное"/>
+                                          Style="{StaticResource HintComboBox}">
+									<ComboBox.ToolTip>
+										<ToolTip Content="Распределение времени обработки фазы:&#10;• Нормальное - вокруг μ с отклонением σ (рекомендуется)&#10;• Экспоненциальное - случайное время&#10;• Равномерное - в диапазоне [μ-σ, μ+σ]" Placement="Top"/>
+									</ComboBox.ToolTip>
+									<ComboBoxItem Content="Нормальное">
+										<ComboBoxItem.ToolTip>
+											<ToolTip Content="Нормальное распределение N(μ, σ), обрезанное до положительных значений. Моделирует реальные условия с вариацией вокруг среднего."/>
+										</ComboBoxItem.ToolTip>
+									</ComboBoxItem>
+									<ComboBoxItem Content="Экспоненциальное">
+										<ComboBoxItem.ToolTip>
+											<ToolTip Content="Экспоненциальное распределение с параметром 1/μ. Высокая вариативность времён обработки."/>
+										</ComboBoxItem.ToolTip>
+									</ComboBoxItem>
+									<ComboBoxItem Content="Равномерное">
+										<ComboBoxItem.ToolTip>
+											<ToolTip Content="Равномерное распределение на интервале [μ-σ, μ+σ]. Все значения в диапазоне равновероятны."/>
+										</ComboBoxItem.ToolTip>
+									</ComboBoxItem>
 								</ComboBox>
 							</StackPanel>
 
 							<StackPanel Grid.Column="2" Margin="8,0,0,0">
 								<TextBlock Text="Seed генератора"
-                                           Style="{StaticResource MaterialDesignCaptionTextBlock}"
-                                           Margin="0,0,0,4"/>
+                                           Style="{StaticResource HintTextBlock}"
+                                           Margin="0,0,0,4">
+									<TextBlock.ToolTip>
+										<ToolTip Content="Начальное значение генератора случайных чисел. Позволяет воспроизводить результаты экспериментов." Placement="Top"/>
+									</TextBlock.ToolTip>
+								</TextBlock>
 								<TextBox x:Name="txtSeed" Text="42"
-                                         Style="{StaticResource MaterialDesignTextBox}"
-                                         materialDesign:HintAssist.Hint="Например: 42"/>
+                                         Style="{StaticResource HintTextBox}"
+                                         materialDesign:HintAssist.Hint="Например: 42">
+									<TextBox.ToolTip>
+										<ToolTip Content="Seed (зерно) генератора псевдослучайных чисел. Один и тот же seed даёт одинаковую последовательность случайных чисел для воспроизводимости экспериментов." Placement="Top"/>
+									</TextBox.ToolTip>
+								</TextBox>
 							</StackPanel>
 						</Grid>
 					</GroupBox>
@@ -157,14 +258,25 @@
 		</ScrollViewer>
 
 		<StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,20,0,0">
+
 			<Button x:Name="btnCancel" Content="Отмена" Width="110" Margin="0,0,8,0"
-                    Style="{StaticResource MaterialDesignOutlinedButton}"
-                    Click="btnCancel_Click"/>
+					Style="{StaticResource MaterialDesignFlatButton}"
+					Foreground="{DynamicResource MaterialDesignBody}"
+					Click="btnCancel_Click"
+					Cursor="Hand">
+				<Button.ToolTip>
+					<ToolTip Content="Закрыть окно без сохранения изменений"/>
+				</Button.ToolTip>
+			</Button>
+
 			<Button x:Name="btnApply" Content="Применить" Width="110"
-                    Style="{StaticResource MaterialDesignRaisedButton}"
-                    Background="{DynamicResource PrimaryHueMidBrush}"
-                    Foreground="{DynamicResource PrimaryHueMidForegroundBrush}"
-                    Click="btnApply_Click"/>
+					Style="{StaticResource MaterialDesignRaisedButton}"
+					Click="btnApply_Click"
+					Cursor="Hand">
+				<Button.ToolTip>
+					<ToolTip Content="Сохранить параметры конфигурации и закрыть окно"/>
+				</Button.ToolTip>
+			</Button>
 		</StackPanel>
 	</Grid>
 </Window>

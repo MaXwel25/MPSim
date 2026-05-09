@@ -58,4 +58,43 @@
         <Setter Property="Width" Value="200"/>
     </Style>
 
+    <Style x:Key="HintTextBlock" TargetType="TextBlock" BasedOn="{StaticResource MaterialDesignCaptionTextBlock}">
+        <Setter Property="Cursor" Value="Help"/>
+        <Setter Property="ToolTipService.ShowDuration" Value="15000"/>
+        <Setter Property="ToolTipService.InitialShowDelay" Value="500"/>
+        <Style.Triggers>
+            <Trigger Property="IsMouseOver" Value="True">
+                <Setter Property="Foreground" Value="{DynamicResource PrimaryHueMidBrush}"/>
+                <Setter Property="FontWeight" Value="SemiBold"/>
+                <Setter Property="TextDecorations" Value="Underline"/>
+            </Trigger>
+        </Style.Triggers>
+    </Style>
+
+    <Style x:Key="HintTextBox" TargetType="TextBox" BasedOn="{StaticResource MaterialDesignTextBox}">
+        <Setter Property="Cursor" Value="Help"/>
+        <Setter Property="ToolTipService.ShowDuration" Value="15000"/>
+        <Setter Property="BorderThickness" Value="2"/>
+        <Setter Property="SnapsToDevicePixels" Value="True"/>
+        <Style.Triggers>
+            <Trigger Property="IsMouseOver" Value="True">
+                <Setter Property="BorderBrush" Value="{DynamicResource PrimaryHueMidBrush}"/>
+                <Setter Property="BorderThickness" Value="2"/>
+                <Setter Property="materialDesign:HintAssist.Foreground" Value="{DynamicResource PrimaryHueMidBrush}"/>
+            </Trigger>
+        </Style.Triggers>
+    </Style>
+
+    <Style x:Key="HintComboBox" TargetType="ComboBox" BasedOn="{StaticResource MaterialDesignComboBox}">
+        <Setter Property="Cursor" Value="Help"/>
+        <Setter Property="ToolTipService.ShowDuration" Value="15000"/>
+        <Style.Triggers>
+            <Trigger Property="IsMouseOver" Value="True">
+                <Setter Property="BorderBrush" Value="{DynamicResource PrimaryHueMidBrush}"/>
+                <Setter Property="Foreground" Value="{DynamicResource PrimaryHueMidBrush}"/>
+            </Trigger>
+        </Style.Triggers>
+    </Style>
+
+    
 </ResourceDictionary>

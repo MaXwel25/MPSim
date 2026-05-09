@@ -86,23 +86,23 @@ namespace MPSim
 
                 txtStatus.Text = "Инициализация...";
 
-                // Очистка перед запуском
+                // очистка перед запуском
                 _tasksCollection.Clear();
                 _phasesCollection.Clear();
 
-                // Инициализация фаз
+                // инициализация фаз
                 for (int i = 1; i <= _config.PhasesCount; i++)
                     _phasesCollection.Add(new PhaseViewModel { Id = i });
 
                 _engine = new SimulationEngine(_config);
 
-                // Подписка на события для обновления UI
+                // подписка на события для обновления UI
                 _engine.OnTaskProcessed += OnTaskProcessed;
                 _engine.OnRunCompleted += OnRunCompleted;
 
                 txtStatus.Text = "Запуск симуляции...";
 
-                // Запуск в фоне с поддержкой отмены
+                // запуск в фоне с поддержкой отмены
                 await Task.Run(() => RunSimulationWithProgress(_cts.Token), _cts.Token);
 
                 txtStatus.Text = "Симуляция завершена";
@@ -133,10 +133,10 @@ namespace MPSim
 
         private void RunSimulationWithProgress(CancellationToken token)
         {
-            // Подписка на события внутри фонового потока
+            // подписка на события внутри фонового потока
             _engine!.OnTaskProcessed += (current, total) =>
             {
-                // Обновление UI через Dispatcher
+                // обновление UI через Dispatcher
                 Application.Current.Dispatcher.Invoke(() =>
                 {
                     ProgressBar.Value = 100.0 * current / total;
@@ -162,13 +162,13 @@ namespace MPSim
 
         private void OnTaskProcessed(int current, int total)
         {
-            // Обновление прогресс-бара и статуса из фонового потока
+            // обновление прогресс-бара и статуса из фонового потока
             Application.Current.Dispatcher.Invoke(() =>
             {
                 ProgressBar.Value = 100.0 * current / total;
                 txtStatus.Text = $"Обработано: {current}/{total}";
 
-                // Добавление задания в таблицу (если ещё не добавлено)
+                // добавление задания в таблицу (если ещё не добавлено)
                 var task = _engine?.GetTask(current);
                 if (task != null && !_tasksCollection.Any(t => t.Id == task.Id))
                 {

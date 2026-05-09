@@ -93,7 +93,7 @@ namespace MPSim.Core
                 // пропускная способность
                 for (int j = 0; j < tasksProcessed; j++)
                 {
-                    if (_tasks[j]?.FinishTimes?.Length == k) // ← Защита от null
+                    if (_tasks[j]?.FinishTimes?.Length == k) // защита от null
                     {
                         double finishTime = _tasks[j].FinishTimes[k - 1];
                         if (finishTime > 0)
