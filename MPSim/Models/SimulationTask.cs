@@ -29,7 +29,7 @@ namespace MPSim.Models
         // общее время выполнения задания
         public double TotalTime => FinishTimes[PhaseCount - 1] - ArrivalTime;
 
-        // Суммарное время ожидания
+        // суммарное время ожидания
         public double TotalWaitTime => WaitTimes.Sum();
     }
 }

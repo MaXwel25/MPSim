@@ -4,87 +4,170 @@ using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using Microsoft.Win32;
+using MPSim.Core;
 using MPSim.Services;
 using ScottPlot;
-using ScottPlot.Plottables;
 
 namespace MPSim.UI
 {
     public partial class ChartsWindow : Window
     {
         private Plot _plot;
-        //private Plot _plot = null;
-        private readonly Random _random = new Random(42); // временно
+        private readonly SimulationEngine _engine;
+        private int _currentChartType;
 
-        public ChartsWindow()
+        public ChartsWindow(SimulationEngine engine)
         {
             InitializeComponent();
+            _engine = engine ?? throw new ArgumentNullException(nameof(engine));
+            _currentChartType = 0;
+
             Loaded += (s, e) => InitializePlot(); // инит только после загрузки
+        }
+
+        private void UpdateChartData()
+        {
+            if (_plot == null || _engine?.ThroughputPerTask == null) return;
+            _plot.Clear();
+
+            switch (_currentChartType)
+            {
+                case 0: PlotThroughput(); break;
+                case 1: PlotUtilization(); break;
+                case 2: PlotAvgWait(); break;
+                case 3: PlotAvgIdle(); break;
+            }
+            MainPlot?.Refresh();
         }
 
         private void InitializePlot()
         {
             if (MainPlot?.Plot == null)
             {
-                MessageBox.Show(
-                    "ERROR: График не инициализирован.\nПроверьте:\n" +
-                    "1. В XAML: xmlns:ScottPlot=\"clr-namespace:ScottPlot.Wpf;assembly=ScottPlot.Wpf\"\n" +
-                    "2. В XAML: <ScottPlot:WpfPlot x:Name=\"MainPlot\"/>\n" +
-                    "3. Установлен NuGet-пакет: ScottPlot.WPF",
-                    "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show("Ошибка инициализации графика.", "Ошибка",
+                    MessageBoxButton.OK, MessageBoxImage.Error);
                 return;
             }
 
             _plot = MainPlot.Plot;
-
-            _plot.FigureBackground.Color = ScottPlot.Color.FromHex("#FFFFFF");
-            _plot.DataBackground.Color = ScottPlot.Color.FromHex("#FAFAFA");
-
             UpdatePlotTheme();
             UpdateChartData();
             MainPlot.Refresh();
         }
 
-        private void UpdateChartData()
+        private void PlotThroughput()
         {
-            if (_plot == null) return;
-            _plot.Clear();
+            var x = Enumerable.Range(1, _engine.ThroughputPerTask.Length)
+                .Select(i => (double)i).ToArray();
+            var y = _engine.ThroughputPerTask;
 
+            var scatter = _plot.Add.Scatter(x, y);
+            scatter.MarkerStyle.FillColor = ScottPlot.Colors.Blue;
+            scatter.MarkerStyle.Size = 3;
+            scatter.LineStyle.Color = Colors.Blue;
 
-            var phases = Enumerable.Range(1, 10).Select(x => (double)x).ToArray();
-            var values = phases.Select(p => 0.3 + _random.NextDouble() * 0.4).ToArray();
+            var avgLine = _plot.Add.Line(x.First(), y.Average(), x.Last(), y.Average());
+            avgLine.Color = Colors.Red;
+            avgLine.LineStyle.Width = 2;
+            avgLine.LineStyle.Pattern = LinePattern.Dashed;
 
-            var bar = _plot.Add.Bars(phases, values);
-            foreach (var b in bar.Bars)
+            _plot.Axes.Bottom.Label.Text = "Номер задания (N)";
+            _plot.Axes.Left.Label.Text = "Накопленная пропускная способность";
+            _plot.Axes.SetLimitsX(0, x.Length + 1);
+        }
+
+        private void PlotUtilization()
+        {
+            var x = Enumerable.Range(1, _engine.UtilizationPerPhase.Length)
+                .Select(i => (double)i).ToArray();
+            var y = _engine.UtilizationPerPhase;
+
+            var bars = _plot.Add.Bars(x, y);
+            foreach (var bar in bars.Bars)
             {
-                b.FillColor = ScottPlot.Color.FromHex("#2196F3");
+                bar.FillColor = Colors.SteelBlue;
+                bar.LineColor = ScottPlot.Colors.Transparent;
+                bar.LineWidth = 0;
             }
 
             _plot.Axes.Bottom.Label.Text = "Номер фазы";
             _plot.Axes.Left.Label.Text = "Коэффициент загрузки (ρ)";
-            _plot.Axes.SetLimitsX(0.5, 10.5);
+            _plot.Axes.SetLimitsX(0.5, x.Length + 0.5);
             _plot.Axes.SetLimitsY(0, 1.0);
         }
 
+        private void PlotAvgWait()
+        {
+            var x = Enumerable.Range(1, _engine.AvgWaitPerPhase.Length)
+                .Select(i => (double)i).ToArray();
+            var y = _engine.AvgWaitPerPhase;
+
+            var scatter = _plot.Add.Scatter(x, y);
+            scatter.MarkerStyle.FillColor = ScottPlot.Colors.Orange;
+            scatter.MarkerStyle.Size = 6;
+            scatter.LineStyle.Color = Colors.Transparent; // убираем линию оставляем точки
+
+            _plot.Axes.Bottom.Label.Text = "Номер фазы";
+            _plot.Axes.Left.Label.Text = "Среднее время ожидания";
+            _plot.Axes.SetLimitsX(0.5, x.Length + 0.5);
+        }
+
+        private void PlotAvgIdle()
+        {
+            var x = Enumerable.Range(1, _engine.AvgIdlePerPhase.Length)
+                .Select(i => (double)i).ToArray();
+            var y = _engine.AvgIdlePerPhase;
+
+            var scatter = _plot.Add.Scatter(x, y);
+            scatter.MarkerStyle.FillColor = ScottPlot.Colors.Green;
+            scatter.MarkerStyle.Size = 6;
+            scatter.LineStyle.Color = Colors.Transparent;
+
+            _plot.Axes.Bottom.Label.Text = "Номер фазы";
+            _plot.Axes.Left.Label.Text = "Среднее время простоя";
+            _plot.Axes.SetLimitsX(0.5, x.Length + 0.5);
+        }
+        //private void UpdateChartData()
+        //{
+        //    if (_plot == null) return;
+        //    _plot.Clear();
+
+
+        //    var phases = Enumerable.Range(1, 10).Select(x => (double)x).ToArray();
+        //    var values = phases.Select(p => 0.3 + _random.NextDouble() * 0.4).ToArray();
+
+        //    var bar = _plot.Add.Bars(phases, values);
+        //    foreach (var b in bar.Bars)
+        //    {
+        //        b.FillColor = ScottPlot.Color.FromHex("#2196F3");
+        //    }
+
+        //    _plot.Axes.Bottom.Label.Text = "Номер фазы";
+        //    _plot.Axes.Left.Label.Text = "Коэффициент загрузки (ρ)";
+        //    _plot.Axes.SetLimitsX(0.5, 10.5);
+        //    _plot.Axes.SetLimitsY(0, 1.0);
+        //}
+
         private void cbChartType_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            UpdateChartData();
-            MainPlot?.Refresh();
+            if (cbChartType?.SelectedIndex is >= 0 and <= 3)
+            {
+                _currentChartType = cbChartType.SelectedIndex;
+                UpdateChartData();
+            }
         }
 
         private void btnExport_Click(object sender, RoutedEventArgs e)
         {
-            if (_plot == null) return;
-            var dialog = new SaveFileDialog
+            var dialog = new Microsoft.Win32.SaveFileDialog
             {
                 Filter = "PNG Image|*.png",
-                DefaultExt = ".png",
                 FileName = $"Chart_{DateTime.Now:yyyyMMdd_HHmmss}"
             };
 
             if (dialog.ShowDialog() == true)
             {
-                _plot.SavePng(dialog.FileName, 1200, 800);
+                _plot?.SavePng(dialog.FileName, 1200, 800);
                 MessageBox.Show("График сохранён.", "Успех", MessageBoxButton.OK, MessageBoxImage.Information);
             }
         }
@@ -97,6 +180,8 @@ namespace MPSim.UI
 
         private void btnExportCsv_Click(object sender, RoutedEventArgs e)
         {
+            if (_engine == null) return;
+
             var dialog = new SaveFileDialog
             {
                 Filter = "CSV File|*.csv",
@@ -110,17 +195,14 @@ namespace MPSim.UI
             {
                 using var writer = new StreamWriter(dialog.FileName, false, System.Text.Encoding.UTF8);
 
-                writer.WriteLine("Phase,LoadFactor,AvgWaitTime,AvgIdleTime,Throughput");
+                writer.WriteLine("Phase,LoadFactor,AvgWaitTime,AvgIdleTime");
 
-                var phases = Enumerable.Range(1, 10);
-                foreach (var p in phases)
+                for (int i = 0; i < _engine.UtilizationPerPhase.Length; i++)
                 {
-                    double load = 0.3 + _random.NextDouble() * 0.4;
-                    double wait = _random.NextDouble() * 2.0;
-                    double idle = _random.NextDouble() * 1.5;
-                    double throughput = 0.8 + p * 0.02;
-
-                    writer.WriteLine($"{p},{load:F4},{wait:F4},{idle:F4},{throughput:F4}");
+                    writer.WriteLine($"{i + 1}," +
+                        $"{_engine.UtilizationPerPhase[i]:F4}," +
+                        $"{_engine.AvgWaitPerPhase[i]:F4}," +
+                        $"{_engine.AvgIdlePerPhase[i]:F4}");
                 }
 
                 MessageBox.Show($"Данные успешно экспортированы:\n{dialog.FileName}",
@@ -136,19 +218,14 @@ namespace MPSim.UI
         private void UpdatePlotTheme()
         {
             if (_plot == null) return;
-            var isDark = ThemeManager.GetCurrentTheme() == "Dark";
+            bool isDark = ThemeManager.GetCurrentTheme() == "Dark";
+            var bgColor = isDark ? Color.FromHex("#1E1E1E") : Color.FromHex("#FFFFFF");
+            var dataColor = isDark ? Color.FromHex("#2D2D2D") : Color.FromHex("#FAFAFA");
+            var axisColor = isDark ? Color.FromHex("#BDBDBD") : Color.FromHex("#424242");
 
-            _plot.FigureBackground.Color = isDark
-                ? ScottPlot.Color.FromHex("#1E1E1E")
-                : ScottPlot.Color.FromHex("#FFFFFF");
-
-            _plot.DataBackground.Color = isDark
-                ? ScottPlot.Color.FromHex("#2D2D2D")
-                : ScottPlot.Color.FromHex("#FAFAFA");
-
-            _plot.Axes.Color(isDark
-                ? ScottPlot.Color.FromHex("#BDBDBD")
-                : ScottPlot.Color.FromHex("#424242"));
+            _plot.FigureBackground.Color = bgColor;
+            _plot.DataBackground.Color = dataColor;
+            _plot.Axes.Color(axisColor);
         }
     }
 }

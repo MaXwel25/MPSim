@@ -28,7 +28,7 @@ namespace MPSim.Core
             _conveyor = new Conveyor(config.PhasesCount);
         }
 
-        public void Run()
+        public void Run(CancellationToken token = default)
         {
             int k = _config.PhasesCount;
             int n = _config.JobsCount;
@@ -47,15 +47,19 @@ namespace MPSim.Core
 
             for (int run = 0; run < runs; run++)
             {
+                token.ThrowIfCancellationRequested();
                 // детерминированный seed для каждого прогона
                 DistributionGenerators.SetSeed(_config.Seed + run * 7919);
 
                 _conveyor.Reset();
                 _tasks = new SimulationTask[n];
-
+                
                 double currentTime = 0.0;
+                int tasksProcessed = 0;
+
                 for (int j = 0; j < n; j++)
                 {
+                    if (token.IsCancellationRequested) break; // проверяем отмены внутри цикла заданий
                     // генерация интервала поступления
                     double delta = GenerateIntervalTime();
                     currentTime += delta;
@@ -69,10 +73,12 @@ namespace MPSim.Core
                     // обработка задания конвейером
                     _conveyor.ProcessTask(task);
                     _tasks[j] = task;
+                    tasksProcessed++;
 
                     OnTaskProcessed?.Invoke(j + 1, n);
                 }
 
+                if (tasksProcessed == 0) continue;
                 TotalSimulationTime = _conveyor.GetFinishTime();
 
                 // накопление метрик для усреднения
@@ -85,8 +91,15 @@ namespace MPSim.Core
                 }
 
                 // пропускная способность
-                for (int j = 0; j < n; j++)
-                    sumThroughput[j] += (j + 1.0) / _tasks[j].FinishTimes[k - 1];
+                for (int j = 0; j < tasksProcessed; j++)
+                {
+                    if (_tasks[j]?.FinishTimes?.Length == k) // ← Защита от null
+                    {
+                        double finishTime = _tasks[j].FinishTimes[k - 1];
+                        if (finishTime > 0)
+                            sumThroughput[j] += (j + 1.0) / finishTime;
+                    }
+                }
 
                 OnRunCompleted?.Invoke(run + 1);
             }
