@@ -26,14 +26,10 @@ namespace MPSim.Models
             IdleTimes = new double[phaseCount];
         }
 
-        /// <summary>
-        /// Общее время выполнения задания (формула 5)
-        /// </summary>
+        // общее время выполнения задания
         public double TotalTime => FinishTimes[PhaseCount - 1] - ArrivalTime;
 
-        /// <summary>
-        /// Суммарное время ожидания
-        /// </summary>
+        // Суммарное время ожидания
         public double TotalWaitTime => WaitTimes.Sum();
     }
 }
