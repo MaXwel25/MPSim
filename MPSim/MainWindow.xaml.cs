@@ -110,6 +110,7 @@ namespace MPSim
             if (settingsWindow.ShowDialog() == true)
             {
                 _config = settingsWindow.ResultConfig;
+                UpdateConfigDisplay();
                 txtStatus.Text = "Конфигурация обновлена";
             }
         }
