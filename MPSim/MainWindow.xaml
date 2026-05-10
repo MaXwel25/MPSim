@@ -4,6 +4,7 @@
         xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
         Title="MPSim" 
         Height="900" Width="1280"
+        Icon="Images/app.ico"
         WindowStartupLocation="CenterScreen"
         Background="{DynamicResource MaterialDesignPaper}"
         Foreground="{DynamicResource MaterialDesignBody}"
@@ -71,7 +72,10 @@
                             Background="{StaticResource DangerBrush}" Foreground="White"
                             Click="btnStop_Click" IsEnabled="False"/>
                     <Button x:Name="btnReset" Content="🔄 Сброс" Width="100" Margin="0,0,16,0"
-                            Style="{StaticResource MaterialDesignOutlinedButton}" 
+                            Style="{StaticResource MaterialDesignOutlinedButton}"
+                            Foreground="{DynamicResource MaterialDesignBody}"
+                            BorderBrush="{DynamicResource MaterialDesignDivider}"
+                            materialDesign:ButtonAssist.CornerRadius="4"
                             Click="btnReset_Click"/>
 
                     <ProgressBar x:Name="ProgressBar" Width="200" Height="20" Value="0"
@@ -102,7 +106,7 @@
                                     <ColumnDefinition Width="Auto"/>
                                 </Grid.ColumnDefinitions>
 
-                                <TextBlock Grid.Column="0" Text="📊 Фильтр по фазе:" 
+                                <TextBlock Grid.Column="0" Text="Фильтр по фазе:" 
                            VerticalAlignment="Center" Margin="0,0,12,0"
                            FontWeight="SemiBold"/>
 
@@ -126,7 +130,7 @@
                                 <TextBlock Grid.Row="0" Text="Задания по фазам" Padding="12,8" 
                            FontWeight="Bold" 
                            Background="{DynamicResource PrimaryHueLightBrush}"
-                           Foreground="{DynamicResource PrimaryHueLightForegroundBrush}"/>
+                           Foreground="{DynamicResource MainButtonStyle}"/>
                                 <DataGrid Grid.Row="1" x:Name="dgTasksByPhase" 
                           Style="{StaticResource MaterialDesignDataGrid}"
                           AutoGenerateColumns="False" IsReadOnly="True"
@@ -150,10 +154,10 @@
                                 <RowDefinition Height="Auto"/>
                                 <RowDefinition Height="*"/>
                             </Grid.RowDefinitions>
-                            <TextBlock Grid.Row="0" Text="⚙️ Фазы (ФУ)" Padding="12,8" 
+                            <TextBlock Grid.Row="0" Text="Фазы (ФУ)" Padding="12,8" 
                        FontWeight="Bold"
                        Background="{DynamicResource PrimaryHueLightBrush}"
-                       Foreground="{DynamicResource PrimaryHueLightForegroundBrush}"/>
+                       Foreground="{DynamicResource MainButtonStyle}"/>
                             <DataGrid Grid.Row="1" x:Name="dgPhases" 
                       Style="{StaticResource MaterialDesignDataGrid}"
                       AutoGenerateColumns="False" IsReadOnly="True"
@@ -197,8 +201,8 @@
                        FontWeight="Bold" 
                        FontSize="18"
                        Margin="0,0,0,12"
-                       Foreground="{DynamicResource PrimaryHueMidBrush}"/>
-                        <WrapPanel Orientation="Horizontal">
+                       Foreground="{DynamicResource ConfigHeaderBrush}"/>
+                    <WrapPanel Orientation="Horizontal">
                 <StackPanel Margin="0,0,24,0">
                     <TextBlock Text="Фазы (k)" 
                                Style="{StaticResource MaterialDesignCaptionTextBlock}"
@@ -266,7 +270,7 @@
                        FontWeight="Bold" 
                        FontSize="18"
                        Margin="0,0,0,12"
-                       Foreground="{DynamicResource PrimaryHueMidBrush}"/>
+                       Foreground="{DynamicResource SuccessBrush}"/>
             <WrapPanel Orientation="Horizontal">
                 <StackPanel Margin="0,0,24,0">
                     <TextBlock Text="Обработано" 

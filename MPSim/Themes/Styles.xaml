@@ -96,5 +96,8 @@
         </Style.Triggers>
     </Style>
 
-    
+    <SolidColorBrush x:Key="ConfigHeaderBrush" Color="#FF5722"/>
+    <SolidColorBrush x:Key="StatsHeaderBrush" Color="#009688"/>
+    <SolidColorBrush x:Key="MainButtonStyle" Color="#03A9F4"/>
+
 </ResourceDictionary>

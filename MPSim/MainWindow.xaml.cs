@@ -461,7 +461,7 @@ namespace MPSim
                 ? _tasksByPhaseCollection.Average(t => t.PhaseWaitTime)
                 : 0;
 
-            lblPhaseStats.Text = $"Заданий: {totalTasks}, Ср. ожидание: {avgWait:F3}";
+            lblPhaseStats.Text = $"Заданий: {totalTasks}";
         }
 
         // обработчик изменения выбора фазы
