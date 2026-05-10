@@ -1,4 +1,7 @@
 ﻿using System.Collections.ObjectModel;
+using System.ComponentModel;
+using System.Runtime.CompilerServices;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using MPSim.Core;
@@ -25,19 +28,25 @@ namespace MPSim
         private CancellationTokenSource? _cts;
         private bool _isRunning;
 
-        private ObservableCollection<TaskViewModel> _tasksCollection;
-        private ObservableCollection<PhaseViewModel> _phasesCollection;
+        private readonly ObservableCollection<TaskViewModel> _tasksCollection = new();
+        private readonly ObservableCollection<PhaseViewModel> _phasesCollection = new();
+
+        private readonly ObservableCollection<TaskByPhaseViewModel> _tasksByPhaseCollection = new();
+        private int _selectedPhaseId = 0;
+
 
 
         public MainWindow()
         {
             InitializeComponent();
             _config = new SimulationConfig();
-            _tasksCollection = new ObservableCollection<TaskViewModel>();
-            _phasesCollection = new ObservableCollection<PhaseViewModel>();
+            //_tasksCollection = new ObservableCollection<TaskViewModel>();
+            //_phasesCollection = new ObservableCollection<PhaseViewModel>();
 
-            dgTasks.ItemsSource = _tasksCollection;
+            //dgTasks.ItemsSource = _tasksCollection;
             dgPhases.ItemsSource = _phasesCollection;
+
+            dgTasksByPhase.ItemsSource = _tasksByPhaseCollection;
 
             ThemeManager.ApplyTheme("Light");
             IsDarkTheme = false;
@@ -74,8 +83,19 @@ namespace MPSim
                 Application.Current.Dispatcher.Invoke(() => label.Text = value);
         }
 
+        //private DateTime _lastStatsUpdate = DateTime.MinValue;
+        //private const int STATS_UPDATE_INTERVAL_MS = 100; // обновлять не чаще 10 раз в секунду (для оптимизации UI)
+
+
         private void UpdateStatsRealTime(int processed, SimulationEngine engine)
         {
+            // нерабочая оптимизация (проблема с отображением статистики)
+            //var now = DateTime.Now;
+            //if ((now - _lastStatsUpdate).TotalMilliseconds < STATS_UPDATE_INTERVAL_MS) // считаем время
+            //    return;
+
+            //_lastStatsUpdate = now;
+
             // обработано заданий
             UpdateStatLabel(lblProcessed, processed.ToString());
 
@@ -89,10 +109,13 @@ namespace MPSim
             double avgUtil = engine.UtilizationPerPhase.Where(v => v > 0).DefaultIfEmpty(0).Average();
             UpdateStatLabel(lblAvgUtil, $"{avgUtil:P1}");
 
+            double throughput = engine.GetCurrentThroughput();
+            UpdateStatLabel(lblThroughput, throughput.ToString("F4"));
+
             // пропускная способность (текущая)
             if (engine.ThroughputPerTask?.Length > 0 && processed > 0)
             {
-                double throughput = engine.ThroughputPerTask[Math.Min(processed - 1, engine.ThroughputPerTask.Length - 1)];
+                double urrentthroughput = engine.ThroughputPerTask[Math.Min(processed - 1, engine.ThroughputPerTask.Length - 1)];
                 UpdateStatLabel(lblThroughput, throughput.ToString("F4"));
             }
         }
@@ -133,6 +156,13 @@ namespace MPSim
 
                 txtStatus.Text = "Инициализация...";
 
+                if (_tasksCollection == null || _phasesCollection == null)
+                {
+                    MessageBox.Show("Коллекции не инициализированы!", "Ошибка",
+                        MessageBoxButton.OK, MessageBoxImage.Error);
+                    return;
+                }
+
                 // очистка перед запуском
                 _tasksCollection.Clear();
                 _phasesCollection.Clear();
@@ -142,6 +172,8 @@ namespace MPSim
                     _phasesCollection.Add(new PhaseViewModel { Id = i });
 
                 _engine = new SimulationEngine(_config);
+
+                InitializePhaseFilter();
 
                 // подписка на события для обновления UI
                 _engine.OnTaskProcessed += OnTaskProcessed;
@@ -163,7 +195,7 @@ namespace MPSim
                                 Id = task.Id,
                                 ArrivalTime = task.ArrivalTime,
                                 WaitTime = task.TotalWaitTime,
-                                Status = current == total ? "Завершено" : "В обработке"
+                                Status = "В обработке"
                             });
                         }
                     });
@@ -184,10 +216,16 @@ namespace MPSim
 
                 txtStatus.Text = "Симуляция завершена";
                 ProgressBar.Visibility = Visibility.Collapsed;
+                UpdateTasksByPhase();
+
+                foreach (var task in _tasksCollection)
+                    task.Status = "Завершено";
 
                 // обновляем статистику
                 UpdateStatsRealTime(_config.JobsCount, _engine);
                 UpdatePhasesStatistics();
+
+                UpdateTasksByPhase();
             }
             catch (OperationCanceledException)
             {
@@ -268,6 +306,25 @@ namespace MPSim
             });
         }
 
+        // метод инициализации фильтра по фазам
+        private void InitializePhaseFilter()
+        {
+            cbPhaseFilter.Items.Clear();
+            cbPhaseFilter.Items.Add(new ComboBoxItem { Content = "Все фазы", Tag = 0 });
+
+            for (int i = 1; i <= _config.PhasesCount; i++)
+            {
+                cbPhaseFilter.Items.Add(new ComboBoxItem
+                {
+                    Content = $"Фаза {i}",
+                    Tag = i
+                });
+            }
+
+            if (cbPhaseFilter.Items.Count > 0)
+                cbPhaseFilter.SelectedIndex = 0;
+        }
+
         private void UpdatePhasesStatistics()
         {
             if (_engine == null) return;
@@ -300,8 +357,8 @@ namespace MPSim
                 return;
             }
 
-            _tasksCollection.Clear();
-            _phasesCollection.Clear();
+            _tasksCollection?.Clear();
+            _phasesCollection?.Clear();
             _engine = null;
 
             SimulationArea.Visibility = Visibility.Collapsed;
@@ -346,21 +403,162 @@ namespace MPSim
         //    dgPhases.ItemsSource = phases;
         //}
 
-        // для отображения на главном экране
-        public class TaskViewModel
+        // метод инициализации фильтра по фазам
+
+        private void UpdateTasksByPhase()
         {
+            _tasksByPhaseCollection.Clear();
+
+            if (_engine == null) return;
+
+            var selectedPhase = _selectedPhaseId;
+
+            foreach (var taskVm in _tasksCollection)
+            {
+                var task = _engine.GetTask(taskVm.Id);
+                if (task == null) continue;
+
+                if (selectedPhase == 0)
+                {
+                    // показываем все фазы всех заданий
+                    for (int i = 0; i < task.PhaseCount; i++)
+                    {
+                        _tasksByPhaseCollection.Add(new TaskByPhaseViewModel
+                        {
+                            Id = task.Id,
+                            SelectedPhaseId = i + 1,
+                            PhaseStartTime = task.StartTimes[i],
+                            PhaseFinishTime = task.FinishTimes[i],
+                            PhaseWaitTime = task.WaitTimes[i],
+                            PhaseProcessingTime = task.ProcessingTimes[i]
+                        });
+                    }
+                }
+                else if (selectedPhase <= task.PhaseCount)
+                {
+                    // показываем только выбранную фазу
+                    int idx = selectedPhase - 1;
+                    _tasksByPhaseCollection.Add(new TaskByPhaseViewModel
+                    {
+                        Id = task.Id,
+                        SelectedPhaseId = selectedPhase,
+                        PhaseStartTime = task.StartTimes[idx],
+                        PhaseFinishTime = task.FinishTimes[idx],
+                        PhaseWaitTime = task.WaitTimes[idx],
+                        PhaseProcessingTime = task.ProcessingTimes[idx]
+                    });
+                }
+            }
+
+            // обновляем статистику
+            UpdatePhaseFilterStats();
+        }
+
+        private void UpdatePhaseFilterStats()
+        {
+            int totalTasks = _tasksByPhaseCollection.Select(t => t.Id).Distinct().Count();
+            double avgWait = _tasksByPhaseCollection.Count > 0
+                ? _tasksByPhaseCollection.Average(t => t.PhaseWaitTime)
+                : 0;
+
+            lblPhaseStats.Text = $"Заданий: {totalTasks}, Ср. ожидание: {avgWait:F3}";
+        }
+
+        // обработчик изменения выбора фазы
+        private void cbPhaseFilter_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if (cbPhaseFilter?.SelectedItem is ComboBoxItem item)
+            {
+                _selectedPhaseId = item.Tag is int tag ? tag : 0;
+                UpdateTasksByPhase();
+            }
+        }
+
+        // для отображения на главном экране
+        public class TaskViewModel : INotifyPropertyChanged
+        {
+            private string _status = "Ожидает";
+            private int _currentPhase = 0;
+
             public int Id { get; set; }
             public double ArrivalTime { get; set; }
             public double WaitTime { get; set; }
-            public string Status { get; set; } = "Ожидает";
+            public double TotalWaitTime { get; set; }
+            public double TotalProcessingTime { get; set; }
+            public double FinishTime { get; set; }
+
+            public List<PhaseDetailViewModel> PhaseDetails { get; set; } = new();
+
+            public int CurrentPhase
+            {
+                get => _currentPhase;
+                set { _currentPhase = value; OnPropertyChanged(); }
+            }
+
+
+            public string Status
+            {
+                get => _status;
+                set { _status = value; OnPropertyChanged(); }
+            }
+
+            public event PropertyChangedEventHandler PropertyChanged;
+            protected void OnPropertyChanged([CallerMemberName] string name = null) =>
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
         }
 
-        public class PhaseViewModel
+
+        // модель для отображения информации по конкретной фазе
+        public class PhaseDetailViewModel
+        {
+            public int PhaseId { get; set; }
+            public double StartTime { get; set; }
+            public double FinishTime { get; set; }
+            public double WaitTime { get; set; }
+            public double ProcessingTime { get; set; }
+        }
+
+        // модель для отображения в таблице при выборе фазы
+        public class TaskByPhaseViewModel
         {
             public int Id { get; set; }
-            public double Utilization { get; set; }
-            public double IdlePercent { get; set; }
-            public int ProcessedCount { get; set; }
+            public double PhaseStartTime { get; set; }
+            public double PhaseFinishTime { get; set; }
+            public double PhaseWaitTime { get; set; }
+            public double PhaseProcessingTime { get; set; }
+            public int SelectedPhaseId { get; set; }
+        }
+
+
+        public class PhaseViewModel : INotifyPropertyChanged
+        {
+            private double _utilization;
+            private double _idlePercent;
+            private int _processedCount;
+
+            public int Id { get; set; }
+
+            public double Utilization
+            {
+                get => _utilization;
+                set { _utilization = value; OnPropertyChanged(); }
+            }
+
+            public double IdlePercent
+            {
+                get => _idlePercent;
+                set { _idlePercent = value; OnPropertyChanged(); }
+            }
+
+            public int ProcessedCount
+            {
+                get => _processedCount;
+                set { _processedCount = value; OnPropertyChanged(); }
+            }
+
+            public event PropertyChangedEventHandler PropertyChanged;
+            protected void OnPropertyChanged([CallerMemberName] string name = null) =>
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
         }
     }
 }

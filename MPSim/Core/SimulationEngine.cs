@@ -115,6 +115,43 @@ namespace MPSim.Core
                 ThroughputPerTask[j] = sumThroughput[j] / runs;
         }
 
+
+        //public double GetCurrentAverageWait()
+        //{
+        //    if (_conveyor == null) return 0.0;
+        //    double total = 0.0;
+        //    int count = 0;
+        //    for (int i = 0; i < _config.PhasesCount; i++)
+        //    {
+        //        var fu = _conveyor.GetFunctionalUnit(i);
+        //        if (fu.TasksProcessed > 0)
+        //        {
+        //            total += fu.GetAverageWaitTime();
+        //            count++;
+        //        }
+        //    }
+        //    return count > 0 ? total / count : 0.0;
+        //}
+
+        //public double GetCurrentAverageUtilization()
+        //{
+        //    if (_conveyor == null || TotalSimulationTime == 0) return 0.0;
+        //    double total = 0.0;
+        //    for (int i = 0; i < _config.PhasesCount; i++)
+        //    {
+        //        var fu = _conveyor.GetFunctionalUnit(i);
+        //        total += fu.GetUtilization(TotalSimulationTime);
+        //    }
+        //    return _config.PhasesCount > 0 ? total / _config.PhasesCount : 0.0;
+        //}
+
+        public double GetCurrentThroughput()
+        {
+            if (TotalSimulationTime == 0 || _tasks == null) return 0.0;
+            int processed = _tasks.Count(t => t != null && t.FinishTimes[^1] > 0);
+            return processed / TotalSimulationTime;
+        }
+
         // генерация интервала между поступлениями (выбор распределения)
         private double GenerateIntervalTime()
         {

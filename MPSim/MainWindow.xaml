@@ -88,46 +88,76 @@
                         <ColumnDefinition Width="*"/>
                     </Grid.ColumnDefinitions>
 
-                    <materialDesign:Card Grid.Column="0" Margin="16,0,8,0" Padding="0"
-                                         UniformCornerRadius="4">
-                        <Grid>
-                            <Grid.RowDefinitions>
-                                <RowDefinition Height="Auto"/>
-                                <RowDefinition Height="*"/>
-                            </Grid.RowDefinitions>
-                            <TextBlock Grid.Row="0" Text="📋 Задания" Padding="12,8" 
-                                       FontWeight="Bold" 
-                                       Background="{DynamicResource PrimaryHueLightBrush}"
-                                       Foreground="{DynamicResource PrimaryHueLightForegroundBrush}"/>
-                            <DataGrid Grid.Row="1" x:Name="dgTasks" 
-                                      Style="{StaticResource MaterialDesignDataGrid}"
-                                      AutoGenerateColumns="False" IsReadOnly="True"
-                                      HeadersVisibility="Column" GridLinesVisibility="Horizontal">
-                                <DataGrid.Columns>
-                                    <DataGridTextColumn Header="ID" Binding="{Binding Id}" Width="50"/>
-                                    <DataGridTextColumn Header="Поступление" Binding="{Binding ArrivalTime, StringFormat=F2}" Width="90"/>
-                                    <DataGridTextColumn Header="Ожидание" Binding="{Binding WaitTime, StringFormat=F2}" Width="90"/>
-                                    <DataGridTextColumn Header="Статус" Binding="{Binding Status}" Width="*"/>
-                                </DataGrid.Columns>
-                            </DataGrid>
-                        </Grid>
-                    </materialDesign:Card>
+                    <Grid Grid.Column="0">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="*"/>
+                        </Grid.RowDefinitions>
 
-                    <materialDesign:Card Grid.Column="1" Margin="8,0,16,0" Padding="0"
-                                         UniformCornerRadius="4">
+                        <materialDesign:Card Grid.Row="0" Margin="16,0,8,8" Padding="12" UniformCornerRadius="4">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+
+                                <TextBlock Grid.Column="0" Text="📊 Фильтр по фазе:" 
+                           VerticalAlignment="Center" Margin="0,0,12,0"
+                           FontWeight="SemiBold"/>
+
+                                <ComboBox Grid.Column="1" x:Name="cbPhaseFilter" 
+                          SelectionChanged="cbPhaseFilter_SelectionChanged"
+                          Style="{StaticResource MaterialDesignComboBox}"
+                          Margin="0,0,12,0"/>
+
+                                <TextBlock Grid.Column="2" x:Name="lblPhaseStats" 
+                           Text="" VerticalAlignment="Center"
+                           Foreground="{DynamicResource MaterialDesignBodyLight}"/>
+                            </Grid>
+                        </materialDesign:Card>
+
+                        <materialDesign:Card Grid.Row="1" Margin="16,0,8,16" Padding="0" UniformCornerRadius="4">
+                            <Grid>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="*"/>
+                                </Grid.RowDefinitions>
+                                <TextBlock Grid.Row="0" Text="Задания по фазам" Padding="12,8" 
+                           FontWeight="Bold" 
+                           Background="{DynamicResource PrimaryHueLightBrush}"
+                           Foreground="{DynamicResource PrimaryHueLightForegroundBrush}"/>
+                                <DataGrid Grid.Row="1" x:Name="dgTasksByPhase" 
+                          Style="{StaticResource MaterialDesignDataGrid}"
+                          AutoGenerateColumns="False" IsReadOnly="True"
+                          HeadersVisibility="Column" GridLinesVisibility="Horizontal">
+                                    <DataGrid.Columns>
+                                        <DataGridTextColumn Header="ID" Binding="{Binding Id}" Width="50"/>
+                                        <DataGridTextColumn Header="Фаза" Binding="{Binding SelectedPhaseId}" Width="50"/>
+                                        <DataGridTextColumn Header="Начало" Binding="{Binding PhaseStartTime, StringFormat=F2}" Width="90"/>
+                                        <DataGridTextColumn Header="Завершение" Binding="{Binding PhaseFinishTime, StringFormat=F2}" Width="100"/>
+                                        <DataGridTextColumn Header="Ожидание" Binding="{Binding PhaseWaitTime, StringFormat=F2}" Width="90"/>
+                                        <DataGridTextColumn Header="Обработка" Binding="{Binding PhaseProcessingTime, StringFormat=F2}" Width="*"/>
+                                    </DataGrid.Columns>
+                                </DataGrid>
+                            </Grid>
+                        </materialDesign:Card>
+                    </Grid>
+
+                    <materialDesign:Card Grid.Column="1" Margin="8,0,16,16" Padding="0" UniformCornerRadius="4">
                         <Grid>
                             <Grid.RowDefinitions>
                                 <RowDefinition Height="Auto"/>
                                 <RowDefinition Height="*"/>
                             </Grid.RowDefinitions>
                             <TextBlock Grid.Row="0" Text="⚙️ Фазы (ФУ)" Padding="12,8" 
-                                       FontWeight="Bold"
-                                       Background="{DynamicResource PrimaryHueLightBrush}"
-                                       Foreground="{DynamicResource PrimaryHueLightForegroundBrush}"/>
+                       FontWeight="Bold"
+                       Background="{DynamicResource PrimaryHueLightBrush}"
+                       Foreground="{DynamicResource PrimaryHueLightForegroundBrush}"/>
                             <DataGrid Grid.Row="1" x:Name="dgPhases" 
-                                      Style="{StaticResource MaterialDesignDataGrid}"
-                                      AutoGenerateColumns="False" IsReadOnly="True"
-                                      HeadersVisibility="Column" GridLinesVisibility="Horizontal">
+                      Style="{StaticResource MaterialDesignDataGrid}"
+                      AutoGenerateColumns="False" IsReadOnly="True"
+                      HeadersVisibility="Column" GridLinesVisibility="Horizontal">
                                 <DataGrid.Columns>
                                     <DataGridTextColumn Header="Фаза" Binding="{Binding Id}" Width="50"/>
                                     <DataGridTextColumn Header="Загрузка" Binding="{Binding Utilization, StringFormat=P1}" Width="80"/>
