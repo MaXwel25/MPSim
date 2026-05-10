@@ -1,5 +1,6 @@
 ﻿using System.Collections.ObjectModel;
 using System.Windows;
+using System.Windows.Controls;
 using MPSim.Core;
 using MPSim.Models;
 using MPSim.Services;
@@ -40,6 +41,7 @@ namespace MPSim
 
             ThemeManager.ApplyTheme("Light");
             IsDarkTheme = false;
+            UpdateConfigDisplay(); // для обязательно отображения внизу
             UpdateButtonsState();
         }
 
@@ -51,6 +53,49 @@ namespace MPSim
             btnResults.IsEnabled = _engine != null && !_isRunning;
         }
 
+        // для обновления статистики снизу
+        private void UpdateConfigDisplay()
+        {
+            Application.Current.Dispatcher.Invoke(() =>
+            {
+                lblPhases.Text = _config.PhasesCount.ToString();
+                lblJobs.Text = _config.JobsCount.ToString();
+                lblRuns.Text = _config.NumRuns.ToString();
+                lblLambda.Text = _config.Lambda.ToString("F2");
+                lblMu.Text = _config.Mu.ToString("F2");
+                lblSigma.Text = _config.Sigma.ToString("F2");
+            });
+        }
+        private void UpdateStatLabel(TextBlock label, string value)
+        {
+            if (label.CheckAccess())
+                label.Text = value;
+            else
+                Application.Current.Dispatcher.Invoke(() => label.Text = value);
+        }
+
+        private void UpdateStatsRealTime(int processed, SimulationEngine engine)
+        {
+            // обработано заданий
+            UpdateStatLabel(lblProcessed, processed.ToString());
+
+            if (engine?.AvgWaitPerPhase == null) return;
+
+            // среднее ожидание (по всем фазам усреднённое)
+            double avgWait = engine.AvgWaitPerPhase.Where(v => v > 0).DefaultIfEmpty(0).Average();
+            UpdateStatLabel(lblAvgWait, avgWait.ToString("F3"));
+
+            // средняя загрузка
+            double avgUtil = engine.UtilizationPerPhase.Where(v => v > 0).DefaultIfEmpty(0).Average();
+            UpdateStatLabel(lblAvgUtil, $"{avgUtil:P1}");
+
+            // пропускная способность (текущая)
+            if (engine.ThroughputPerTask?.Length > 0 && processed > 0)
+            {
+                double throughput = engine.ThroughputPerTask[Math.Min(processed - 1, engine.ThroughputPerTask.Length - 1)];
+                UpdateStatLabel(lblThroughput, throughput.ToString("F4"));
+            }
+        }
 
         private void btnTheme_Click(object sender, RoutedEventArgs e)
         {
@@ -69,6 +114,7 @@ namespace MPSim
             }
         }
 
+        // ГЛАВНАЯ КНОПКА (уже надоело её вечно дописывать)
         private async void btnStart_Click(object sender, RoutedEventArgs e)
         {
             if (_isRunning) return;
@@ -100,16 +146,47 @@ namespace MPSim
                 _engine.OnTaskProcessed += OnTaskProcessed;
                 _engine.OnRunCompleted += OnRunCompleted;
 
-                txtStatus.Text = "Запуск симуляции...";
+                _engine.OnTaskProcessed += (current, total) =>
+                {
+                    // обновление прогресса и списка заданий
+                    Application.Current.Dispatcher.Invoke(() =>
+                    {
+                        ProgressBar.Value = 100.0 * current / total;
+                        txtStatus.Text = $"Обработано: {current}/{total}";
 
+                        var task = _engine.GetTask(current);
+                        if (task != null && !_tasksCollection.Any(t => t.Id == task.Id))
+                        {
+                            _tasksCollection.Add(new TaskViewModel
+                            {
+                                Id = task.Id,
+                                ArrivalTime = task.ArrivalTime,
+                                WaitTime = task.TotalWaitTime,
+                                Status = current == total ? "Завершено" : "В обработке"
+                            });
+                        }
+                    });
+                    UpdateStatsRealTime(current, _engine);
+                };
+
+                _engine.OnRunCompleted += (run) =>
+                {
+                    Application.Current.Dispatcher.Invoke(() =>
+                    {
+                        txtStatus.Text = $"Прогон {run}/{_config.NumRuns} завершён";
+                    });
+                };
+
+                txtStatus.Text = "Запуск симуляции...";
                 // запуск в фоне с поддержкой отмены
                 await Task.Run(() => RunSimulationWithProgress(_cts.Token), _cts.Token);
 
                 txtStatus.Text = "Симуляция завершена";
                 ProgressBar.Visibility = Visibility.Collapsed;
 
-                // Активация кнопок результатов
-                btnResults.IsEnabled = true;
+                // обновляем статистику
+                UpdateStatsRealTime(_config.JobsCount, _engine);
+                UpdatePhasesStatistics();
             }
             catch (OperationCanceledException)
             {
@@ -119,7 +196,7 @@ namespace MPSim
             {
                 MessageBox.Show($"Ошибка: {ex.Message}", "Ошибка симуляции!",
                     MessageBoxButton.OK, MessageBoxImage.Error);
-                txtStatus.Text = "❌ Ошибка";
+                txtStatus.Text = "ERROR!!!";
             }
             finally
             {
@@ -127,7 +204,6 @@ namespace MPSim
                 _cts?.Dispose();
                 _cts = null;
                 UpdateButtonsState();
-                UpdatePhasesStatistics();
             }
         }
 

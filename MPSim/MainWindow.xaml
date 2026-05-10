@@ -3,7 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
         Title="MPSim" 
-        Height="800" Width="1200"
+        Height="900" Width="1280"
         WindowStartupLocation="CenterScreen"
         Background="{DynamicResource MaterialDesignPaper}"
         Foreground="{DynamicResource MaterialDesignBody}"
@@ -13,6 +13,7 @@
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
         <materialDesign:Card Grid.Row="0" Padding="12,10" Margin="0,0,0,12"
@@ -24,7 +25,7 @@
                     <ColumnDefinition Width="*"/>
                     <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
-                
+
                 <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
                     <TextBlock Text="🔬" FontSize="28" VerticalAlignment="Center" Margin="0,0,10,0"/>
                     <StackPanel VerticalAlignment="Center">
@@ -36,19 +37,17 @@
 
                 <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
                     <Button x:Name="btnSettings" Content="⚙️ Конфигурация" Width="161" Margin="0,0,8,0"
-            Style="{StaticResource MaterialDesignFlatButton}"
-            Foreground="{DynamicResource MaterialDesignBody}"
-            Click="btnSettings_Click"/>
-
+                            Style="{StaticResource MaterialDesignFlatButton}"
+                            Foreground="{DynamicResource MaterialDesignBody}"
+                            Click="btnSettings_Click"/>
                     <Button x:Name="btnResults" Content="📊 Аналитика" Width="138" Margin="0,0,8,0"
-            Style="{StaticResource MaterialDesignFlatButton}"
-            Foreground="{DynamicResource MaterialDesignBody}"
-            Click="btnResults_Click"/>
-
+                            Style="{StaticResource MaterialDesignFlatButton}"
+                            Foreground="{DynamicResource MaterialDesignBody}"
+                            Click="btnResults_Click"/>
                     <Button x:Name="btnTheme" Content="🎨 Тема" Width="93"
-            Style="{StaticResource MaterialDesignFlatButton}"
-            Foreground="{DynamicResource MaterialDesignBody}"
-            Click="btnTheme_Click"/>
+                            Style="{StaticResource MaterialDesignFlatButton}"
+                            Foreground="{DynamicResource MaterialDesignBody}"
+                            Click="btnTheme_Click"/>
                 </StackPanel>
             </Grid>
         </materialDesign:Card>
@@ -63,18 +62,19 @@
                 </Grid.RowDefinitions>
 
                 <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="16,12,16,8">
-                    <Button x:Name="btnStart" Content="▶ Запуск" Width="120" Margin="0,0,8,0"
+                    <Button x:Name="btnStart" Content="▶ Старт" Width="120" Margin="0,0,8,0"
                             Style="{StaticResource MaterialDesignRaisedButton}"
                             Background="{StaticResource SuccessBrush}" Foreground="White"
                             Click="btnStart_Click"/>
-                    <Button x:Name="btnStop" Content="СТОП!!!" Width="120" Margin="0,0,8,0"
+                    <Button x:Name="btnStop" Content="Стоп!!!" Width="120" Margin="0,0,8,0"
                             Style="{StaticResource MaterialDesignRaisedButton}"
                             Background="{StaticResource DangerBrush}" Foreground="White"
                             Click="btnStop_Click" IsEnabled="False"/>
                     <Button x:Name="btnReset" Content="🔄 Сброс" Width="100" Margin="0,0,16,0"
-                            Style="{StaticResource MaterialDesignOutlinedButton}" Click="btnReset_Click"/>
+                            Style="{StaticResource MaterialDesignOutlinedButton}" 
+                            Click="btnReset_Click"/>
 
-                    <ProgressBar x:Name="ProgressBar" Width="150" Height="20" Value="0"
+                    <ProgressBar x:Name="ProgressBar" Width="200" Height="20" Value="0"
                                  Style="{StaticResource MaterialDesignLinearProgressBar}"
                                  Visibility="Collapsed" Margin="0,0,16,0"/>
 
@@ -82,13 +82,13 @@
                                Foreground="{DynamicResource MaterialDesignBodyLight}"/>
                 </StackPanel>
 
-                <Grid Grid.Row="1" x:Name="SimulationArea" Visibility="Collapsed">
+                <Grid Grid.Row="1" x:Name="SimulationArea" Visibility="Collapsed" Margin="0,0,0,8">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*"/>
                         <ColumnDefinition Width="*"/>
                     </Grid.ColumnDefinitions>
 
-                    <materialDesign:Card Grid.Column="0" Margin="16,0,8,16" Padding="0"
+                    <materialDesign:Card Grid.Column="0" Margin="16,0,8,0" Padding="0"
                                          UniformCornerRadius="4">
                         <Grid>
                             <Grid.RowDefinitions>
@@ -96,7 +96,8 @@
                                 <RowDefinition Height="*"/>
                             </Grid.RowDefinitions>
                             <TextBlock Grid.Row="0" Text="📋 Задания" Padding="12,8" 
-                                       FontWeight="Bold" Background="{DynamicResource PrimaryHueLightBrush}"
+                                       FontWeight="Bold" 
+                                       Background="{DynamicResource PrimaryHueLightBrush}"
                                        Foreground="{DynamicResource PrimaryHueLightForegroundBrush}"/>
                             <DataGrid Grid.Row="1" x:Name="dgTasks" 
                                       Style="{StaticResource MaterialDesignDataGrid}"
@@ -112,7 +113,7 @@
                         </Grid>
                     </materialDesign:Card>
 
-                    <materialDesign:Card Grid.Column="1" Margin="8,0,16,16" Padding="0"
+                    <materialDesign:Card Grid.Column="1" Margin="8,0,16,0" Padding="0"
                                          UniformCornerRadius="4">
                         <Grid>
                             <Grid.RowDefinitions>
@@ -120,7 +121,8 @@
                                 <RowDefinition Height="*"/>
                             </Grid.RowDefinitions>
                             <TextBlock Grid.Row="0" Text="⚙️ Фазы (ФУ)" Padding="12,8" 
-                                       FontWeight="Bold" Background="{DynamicResource PrimaryHueLightBrush}"
+                                       FontWeight="Bold"
+                                       Background="{DynamicResource PrimaryHueLightBrush}"
                                        Foreground="{DynamicResource PrimaryHueLightForegroundBrush}"/>
                             <DataGrid Grid.Row="1" x:Name="dgPhases" 
                                       Style="{StaticResource MaterialDesignDataGrid}"
@@ -139,9 +141,141 @@
 
                 <StackPanel Grid.Row="1" x:Name="PlaceholderArea" 
                             HorizontalAlignment="Center" VerticalAlignment="Center">
-                    <TextBlock Text="🖥️" FontSize="64" HorizontalAlignment="Center" Margin="0,0,0,20"/>
+                    <TextBlock Text="🖥️" FontSize="72" HorizontalAlignment="Center" Margin="0,0,0,20"/>
                     <TextBlock Text="Нажмите «Запустить» для начала симуляции" 
-                               FontSize="16" FontWeight="Bold" HorizontalAlignment="Center"/>
+                               FontSize="22" FontWeight="Bold" HorizontalAlignment="Center"/>
+                    <TextBlock Text="Или настройте параметры через ⚙️ Конфигурация" 
+                               FontSize="16" Foreground="{DynamicResource MaterialDesignBodyLight}"
+                               HorizontalAlignment="Center" Margin="0,8,0,0"/>
+                </StackPanel>
+            </Grid>
+        </materialDesign:Card>
+
+
+        <materialDesign:Card Grid.Row="2" Margin="0,12,0,0" Padding="20"
+                     UniformCornerRadius="8"
+                     materialDesign:ElevationAssist.Elevation="Dp1">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+
+                <StackPanel Grid.Column="0" Margin="0,0,24,0">
+                    <TextBlock Text="⚙️ Текущая конфигурация" 
+                       FontWeight="Bold" 
+                       FontSize="18"
+                       Margin="0,0,0,12"
+                       Foreground="{DynamicResource PrimaryHueMidBrush}"/>
+                        <WrapPanel Orientation="Horizontal">
+                <StackPanel Margin="0,0,24,0">
+                    <TextBlock Text="Фазы (k)" 
+                               Style="{StaticResource MaterialDesignCaptionTextBlock}"
+                               FontSize="14"/>
+                    <TextBlock x:Name="lblPhases" 
+                               Text="3" 
+                               FontWeight="Bold"
+                               FontSize="22"/>
+                </StackPanel>
+                <StackPanel Margin="0,0,24,0">
+                    <TextBlock Text="Задания (N)" 
+                               Style="{StaticResource MaterialDesignCaptionTextBlock}"
+                               FontSize="14"/>
+                    <TextBlock x:Name="lblJobs" 
+                               Text="100" 
+                               FontWeight="Bold"
+                               FontSize="22"/>
+                </StackPanel>
+                <StackPanel Margin="0,0,24,0">
+                    <TextBlock Text="Прогоны" 
+                               Style="{StaticResource MaterialDesignCaptionTextBlock}"
+                               FontSize="14"/>
+                    <TextBlock x:Name="lblRuns" 
+                               Text="10" 
+                               FontWeight="Bold"
+                               FontSize="22"/>
+                </StackPanel>
+                <StackPanel Margin="0,0,24,0">
+                    <TextBlock Text="λ (поток)" 
+                               Style="{StaticResource MaterialDesignCaptionTextBlock}"
+                               FontSize="14"/>
+                    <TextBlock x:Name="lblLambda" 
+                               Text="0.8" 
+                               FontWeight="Bold"
+                               FontSize="22"/>
+                </StackPanel>
+                <StackPanel Margin="0,0,24,0">
+                    <TextBlock Text="μ (обработка)" 
+                               Style="{StaticResource MaterialDesignCaptionTextBlock}"
+                               FontSize="14"/>
+                    <TextBlock x:Name="lblMu" 
+                               Text="1.0" 
+                               FontWeight="Bold"
+                               FontSize="22"/>
+                </StackPanel>
+                <StackPanel>
+                    <TextBlock Text="σ (разброс)" 
+                               Style="{StaticResource MaterialDesignCaptionTextBlock}"
+                               FontSize="14"/>
+                    <TextBlock x:Name="lblSigma" 
+                               Text="0.2" 
+                               FontWeight="Bold"
+                               FontSize="22"/>
+                </StackPanel>
+            </WrapPanel>
+        </StackPanel>
+
+        <Rectangle Grid.Column="1" Width="2" Height="60" 
+                   Fill="{DynamicResource MaterialDesignDivider}" 
+                   Margin="16,0"
+                   RadiusX="1" RadiusY="1"/>
+
+        <StackPanel Grid.Column="2">
+            <TextBlock Text="📊 Быстрая статистика" 
+                       FontWeight="Bold" 
+                       FontSize="18"
+                       Margin="0,0,0,12"
+                       Foreground="{DynamicResource PrimaryHueMidBrush}"/>
+            <WrapPanel Orientation="Horizontal">
+                <StackPanel Margin="0,0,24,0">
+                    <TextBlock Text="Обработано" 
+                               Style="{StaticResource MaterialDesignCaptionTextBlock}"
+                               FontSize="16"/>
+                    <TextBlock x:Name="lblProcessed" 
+                               Text="0" 
+                               FontWeight="Bold"
+                               FontSize="24"
+                               Foreground="{DynamicResource SuccessBrush}"/>
+                </StackPanel>
+                <StackPanel Margin="0,0,24,0">
+                    <TextBlock Text="Сред. ожидание" 
+                               Style="{StaticResource MaterialDesignCaptionTextBlock}"
+                               FontSize="16"/>
+                    <TextBlock x:Name="lblAvgWait" 
+                               Text="—" 
+                               FontWeight="Bold"
+                               FontSize="24"/>
+                </StackPanel>
+                <StackPanel Margin="0,0,24,0">
+                    <TextBlock Text="Сред. загрузка" 
+                               Style="{StaticResource MaterialDesignCaptionTextBlock}"
+                               FontSize="16"/>
+                    <TextBlock x:Name="lblAvgUtil" 
+                               Text="—" 
+                               FontWeight="Bold"
+                               FontSize="24"/>
+                </StackPanel>
+                <StackPanel>
+                    <TextBlock Text="Пропускная спос." 
+                               Style="{StaticResource MaterialDesignCaptionTextBlock}"
+                               FontSize="16"/>
+                    <TextBlock x:Name="lblThroughput" 
+                               Text="—" 
+                               FontWeight="Bold"
+                               FontSize="24"/>
+                        </StackPanel>
+                    </WrapPanel>
                 </StackPanel>
             </Grid>
         </materialDesign:Card>
