@@ -502,7 +502,7 @@ namespace MPSim
                 set { _status = value; OnPropertyChanged(); }
             }
 
-            public event PropertyChangedEventHandler PropertyChanged;
+            public event PropertyChangedEventHandler? PropertyChanged;
             protected void OnPropertyChanged([CallerMemberName] string name = null) =>
                 PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
         }
@@ -556,7 +556,7 @@ namespace MPSim
                 set { _processedCount = value; OnPropertyChanged(); }
             }
 
-            public event PropertyChangedEventHandler PropertyChanged;
+            public event PropertyChangedEventHandler? PropertyChanged;
             protected void OnPropertyChanged([CallerMemberName] string name = null) =>
                 PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
         }

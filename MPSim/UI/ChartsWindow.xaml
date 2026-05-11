@@ -3,9 +3,9 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
         xmlns:ScottPlot="clr-namespace:ScottPlot.WPF;assembly=ScottPlot.WPF"
-        Title="Визуализация результатов" Height="600" Width="900"
+        Title="Визуализация результатов" Height="700" Width="1100"
+        Icon="/Images/app.ico"
         WindowStartupLocation="CenterOwner"
-        
         Background="{DynamicResource MaterialDesignPaper}"
         TextElement.Foreground="{DynamicResource MaterialDesignBody}"
         TextElement.FontWeight="Regular"
@@ -23,18 +23,49 @@
                              UniformCornerRadius="8"
                              materialDesign:ElevationAssist.Elevation="Dp1">
             <StackPanel Orientation="Horizontal">
-                <TextBlock Text="Тип графика:" 
+
+                <TextBlock Text="Данные:" 
                            VerticalAlignment="Center" 
-                           Margin="0,0,12,0"
-                           Style="{StaticResource MaterialDesignCaptionTextBlock}"/>
-                <ComboBox x:Name="cbChartType" Width="220" 
+                           Margin="0,0,8,0"
+                           FontWeight="SemiBold"/>
+                <ComboBox x:Name="cbDataType" Width="240" 
                           Style="{StaticResource MaterialDesignComboBox}"
-                          SelectionChanged="cbChartType_SelectionChanged">
-                    <ComboBoxItem Content="Загрузка ФУ" IsSelected="True"/>
-                    <ComboBoxItem Content="Время ожидания"/>
-                    <ComboBoxItem Content="Простои ФУ"/>
-                    <ComboBoxItem Content="Пропускная способность"/>
+                          SelectionChanged="cbDataType_SelectionChanged"
+                          Margin="0,0,16,0">
+                    <ComboBoxItem Content="Пропускная способность (накопленная)" IsSelected="True"/>
+                    <ComboBoxItem Content="Загрузка ФУ (ρ)"/>
+                    <ComboBoxItem Content="Среднее время ожидания"/>
+                    <ComboBoxItem Content="Среднее время простоя"/>
+                    <ComboBoxItem Content="Ожидание vs Простой (совмещённый)"/>
+                    <ComboBoxItem Content="Загрузка → Ожидание (корреляция)"/>
+                    <ComboBoxItem Content="Гистограмма пропускной способности"/>
+
+                    <Separator/>
+                    <ComboBoxItem Content="Анализ узких мест"/>
+                    <ComboBoxItem Content="Балансировка загрузки"/>
+                    <ComboBoxItem Content="Распределение ожиданий"/>
+                    <ComboBoxItem Content="Эффективность фаз"/>
+                    <ComboBoxItem Content="Накопленная задержка"/>
                 </ComboBox>
+
+                <TextBlock Text="Стиль:" 
+                           VerticalAlignment="Center" 
+                           Margin="0,0,8,0"
+                           FontWeight="SemiBold"/>
+                <ComboBox x:Name="cbChartStyle" Width="160" 
+                          Style="{StaticResource MaterialDesignComboBox}"
+                          SelectionChanged="cbChartStyle_SelectionChanged">
+                    <ComboBoxItem Content="Столбчатый" IsSelected="True"/>
+                    <ComboBoxItem Content="Точечный"/>
+                    <ComboBoxItem Content="Линейный"/>
+                    <ComboBoxItem Content="Линия + точки"/>
+                </ComboBox>
+                
+                <TextBlock x:Name="lblStats" Text="" 
+                           VerticalAlignment="Center" 
+                           Margin="24,0,0,0"
+                           Foreground="{DynamicResource MaterialDesignBodyLight}"
+                           FontWeight="SemiBold"/>
             </StackPanel>
         </materialDesign:Card>
 
@@ -55,21 +86,20 @@
             </Grid.ColumnDefinitions>
 
             <Button Grid.Column="0" x:Name="btnExportCsv" Content="📄 Экспорт CSV" Width="140" Margin="0,0,8,0"
-            Style="{StaticResource MaterialDesignRaisedButton}"
-            Background="{StaticResource SuccessBrush}"
-            Foreground="White"
-            Click="btnExportCsv_Click"
-            HorizontalAlignment="Left"/>
+                    Style="{StaticResource MaterialDesignRaisedButton}"
+                    Background="{StaticResource SuccessBrush}"
+                    Foreground="White"
+                    Click="btnExportCsv_Click"/>
 
             <StackPanel Grid.Column="2" Orientation="Horizontal" HorizontalAlignment="Right">
-                <Button x:Name="btnExport" Content="📥 Экспорт PNG" Width="140" Margin="0,0,8,0"
-                Style="{StaticResource MaterialDesignOutlinedButton}"
-                Click="btnExport_Click"/>
+                <Button x:Name="btnExport" Content="Экспорт PNG" Width="140" Margin="0,0,8,0"
+                        Style="{StaticResource MaterialDesignRaisedButton}"
+                        Click="btnExport_Click"/>
                 <Button x:Name="btnClose" Content="Закрыть" Width="120"
-                Style="{StaticResource MaterialDesignRaisedButton}"
-                Background="{DynamicResource PrimaryHueMidBrush}"
-                Foreground="{DynamicResource PrimaryHueMidForegroundBrush}"
-                Click="btnClose_Click"/>
+                        Style="{StaticResource MaterialDesignFlatButton}"
+                        Foreground="{DynamicResource MaterialDesignBody}"
+                        Click="btnClose_Click"
+                        Cursor="Hand"/>
             </StackPanel>
         </Grid>
     </Grid>
