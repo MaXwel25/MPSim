@@ -1,0 +1,52 @@
+<mxfile host="app.diagrams.net">
+  <diagram id="FPX5kCh9ibKFCF8telyv" name="Страница-1">
+    <mxGraphModel dx="1830" dy="595" grid="0" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="0" pageScale="1" pageWidth="1169" pageHeight="827" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="ext-config" parent="1" style="shape=process;whiteSpace=wrap;html=1;backgroundOutline=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontStyle=1;size=0;" value="SimulationConfig&#xa;(пользовательский ввод)" vertex="1">
+          <mxGeometry height="60" width="160" x="-478" y="416" as="geometry" />
+        </mxCell>
+        <mxCell id="ext-dist" parent="1" style="shape=process;whiteSpace=wrap;html=1;backgroundOutline=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontStyle=1;size=0;" value="DistributionGenerators&#xa;(сервис случайных величин)" vertex="1">
+          <mxGeometry height="60" width="160" x="-478" y="536" as="geometry" />
+        </mxCell>
+        <mxCell id="ext-output" parent="1" style="shape=process;whiteSpace=wrap;html=1;backgroundOutline=1;fontStyle=1;size=0;" value="Результаты&#xa;(пользователь / UI / экспорт)" vertex="1">
+          <mxGeometry height="60" width="160" x="267" y="740" as="geometry" />
+        </mxCell>
+        <mxCell id="p1" parent="1" style="ellipse;shape=ellipse;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=1;" value="P1&#xa;Генерация заданий&#xa;и инициализация" vertex="1">
+          <mxGeometry height="100" width="140" x="-25" y="454" as="geometry" />
+        </mxCell>
+        <mxCell id="p2" parent="1" style="ellipse;shape=ellipse;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=1;" value="P2&#xa;Обработка заданий&#xa;конвейером" vertex="1">
+          <mxGeometry height="100" width="140" x="261" y="456" as="geometry" />
+        </mxCell>
+        <mxCell id="p3" parent="1" style="ellipse;shape=ellipse;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=1;" value="P3&#xa;Сбор и агрегация&#xa;статистики" vertex="1">
+          <mxGeometry height="100" width="140" x="-155" y="720" as="geometry" />
+        </mxCell>
+        <mxCell id="ds-raw" parent="1" style="shape=partialRectangle;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontStyle=1;left=0;top=0;right=0;bottom=0;overflow=hidden;" value="Сырые метрики&#xa;(очереди, времена)" vertex="1">
+          <mxGeometry height="60" width="120" x="-478" y="740" as="geometry" />
+        </mxCell>
+        <mxCell id="flow-cfg-p1" edge="1" parent="1" source="ext-config" style="endArrow=open;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.3;entryDx=0;entryDy=0;fontSize=11;" target="p1" value="&lt;font style=&quot;font-size: 12px;&quot;&gt;Конфигурация (λ, μ, k...)&lt;/font&gt;">
+          <mxGeometry relative="1" width="160" as="geometry" />
+        </mxCell>
+        <mxCell id="flow-dist-p1" edge="1" parent="1" source="ext-dist" style="endArrow=open;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.7;entryDx=0;entryDy=0;fontSize=11;" target="p1" value="&lt;font style=&quot;font-size: 12px;&quot;&gt;Случайные интервалы / времена обработки&lt;/font&gt;">
+          <mxGeometry relative="1" width="160" as="geometry" />
+        </mxCell>
+        <mxCell id="flow-p1-p2" edge="1" parent="1" source="p1" style="endArrow=open;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;fontSize=11;" target="p2" value="&lt;font style=&quot;font-size: 12px;&quot;&gt;Список заданий&lt;br&gt;(SimulationTask[])&lt;/font&gt;">
+          <mxGeometry relative="1" width="160" as="geometry" />
+        </mxCell>
+        <mxCell id="flow-p2-ds" edge="1" parent="1" source="p2" style="endArrow=open;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;fontSize=11;" target="ds-raw" value="&lt;font style=&quot;font-size: 12px;&quot;&gt;Времена ожидания/обслуживания фаз&lt;/font&gt;">
+          <mxGeometry relative="1" width="160" as="geometry" />
+        </mxCell>
+        <mxCell id="flow-ds-p3" edge="1" parent="1" source="ds-raw" style="endArrow=open;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;fontSize=11;" target="p3" value="&lt;font style=&quot;font-size: 12px;&quot;&gt;Накопленные данные прогонов&lt;/font&gt;">
+          <mxGeometry relative="1" width="160" as="geometry" />
+        </mxCell>
+        <mxCell id="flow-p3-out" edge="1" parent="1" source="p3" style="endArrow=open;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;fontSize=11;" target="ext-output" value="&lt;font style=&quot;font-size: 12px;&quot;&gt;Throughput, Utilization, WaitP95...&lt;br&gt;(PhaseDetailedStats[])&lt;/font&gt;">
+          <mxGeometry relative="1" width="160" as="geometry" />
+        </mxCell>
+        <mxCell id="boundary-engine" parent="1" style="dashed=1;fillColor=none;strokeColor=#6c8ebf;fontSize=14;fontStyle=1;verticalAlign=top;align=left;spacingLeft=10;" value="Архитектурная схема" vertex="1">
+          <mxGeometry height="504.5" width="939" x="-493" y="341" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
